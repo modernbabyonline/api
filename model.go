@@ -54,18 +54,19 @@ type appointment struct {
 }
 
 type client struct {
-	ID              bson.ObjectId `bson:"_id"`
-	Name            string
-	Email           string
-	Phone           string
-	MomDOB          string
-	BabyDOB         string
-	DemographicInfo map[string]bool
-	AverageIncome   int
-	AppointmentsIDs []int
-	AgencyName      string
-	ReferrerName    string
-	ReferrerEmail   string
+	ID               bson.ObjectId `bson:"_id"`
+	ClientName       string
+	ClientEmail      string
+	ClientPhone      string
+	ClientDOB        string
+	BabyDOB          string
+	DemographicInfo  map[string]bool
+	DemographicOther string
+	ClientIncome     int64
+	AppointmentsIDs  []int
+	AgencyName       string
+	ReferrerName     string
+	ReferrerEmail    string
 }
 
 func serialize(v interface{}) string {

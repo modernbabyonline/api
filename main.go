@@ -6,6 +6,7 @@ import (
 	"github.com/apibillme/restserve"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
+	"github.com/tidwall/gjson"
 	"github.com/valyala/fasthttp"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -26,8 +27,28 @@ func main() {
 	})
 
 	app.Use("/save-client", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		test1 := client{ID: bson.NewObjectId(), Name: "John Snow"}
-		saveClient(test1)
+		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+		ctx.SetBodyString(result.Get("clientName").String())
+		c := client{
+			ID:          bson.NewObjectId(),
+			ClientName:  result.Get("clientName").String(),
+			ClientEmail: result.Get("clientEmail").String(),
+			ClientPhone: result.Get("clientPhone").String(),
+			ClientDOB:   result.Get("clientDoB").String(),
+			BabyDOB:     result.Get("babyDoB").String(),
+			DemographicInfo: map[string]bool{
+				"under19":               result.Get("socioL19").Bool(),
+				"unemployed":            result.Get("socioUnemployed").Bool(),
+				"newToCanada":           result.Get("socioNewToCanada").Bool(),
+				"childWithSpecialNeeds": result.Get("socioSpecial").Bool(),
+				"homeless":              result.Get("socioHomeless").Bool(),
+			},
+			DemographicOther: result.Get("socioOther").String(),
+			ClientIncome:     result.Get("clientInc").Int(),
+			ReferrerName:     result.Get("referrerName").String(),
+			ReferrerEmail:    result.Get("referrerEmail").String(),
+		}
+		saveClient(c)
 		next(nil)
 	})
 
