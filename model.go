@@ -55,6 +55,8 @@ type appointment struct {
 
 type client struct {
 	ID               bson.ObjectId `bson:"_id"`
+	DateCreated      time.Time
+	Status           string // PENDING, APPROVED, DECLINED
 	ClientName       string
 	ClientEmail      string
 	ClientPhone      string

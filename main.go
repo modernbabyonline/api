@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/apibillme/restserve"
 	"github.com/sirupsen/logrus"
@@ -26,11 +27,45 @@ func main() {
 		next(nil)
 	})
 
+	app.Use("/update-client", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		id := string(ctx.QueryArgs().Peek("id"))
+		client := findClientById(id)
+
+		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+
+		if result.Get("status").Exists() {
+			client.Status = result.Get("status").String()
+		}
+		if result.Get("clientName").Exists() {
+			client.ClientName = result.Get("clientName").String()
+		}
+		if result.Get("clientEmail").Exists() {
+			client.ClientEmail = result.Get("clientEmail").String()
+		}
+		if result.Get("clientPhone").Exists() {
+			client.ClientPhone = result.Get("clientPhone").String()
+		}
+		if result.Get("clientDoB").Exists() {
+			client.ClientDOB = result.Get("clientDoB").String()
+		}
+		if result.Get("babyDoB").Exists() {
+			client.BabyDOB = result.Get("babyDoB").String()
+		}
+		if result.Get("clientInc").Exists() {
+			client.ClientIncome = result.Get("clientInc").Int()
+		}
+		// TODO doesn't update demographic info or referrer info
+		saveClient(client)
+		ctx.SetBodyString(client.ID.Hex())
+		next(nil)
+	})
+
 	app.Use("/save-client", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
-		ctx.SetBodyString(result.Get("clientName").String())
 		c := client{
 			ID:          bson.NewObjectId(),
+			DateCreated: time.Now(),
+			Status:      "PENDING",
 			ClientName:  result.Get("clientName").String(),
 			ClientEmail: result.Get("clientEmail").String(),
 			ClientPhone: result.Get("clientPhone").String(),
@@ -49,6 +84,7 @@ func main() {
 			ReferrerEmail:    result.Get("referrerEmail").String(),
 		}
 		saveClient(c)
+		ctx.SetBodyString(c.ID.Hex())
 		next(nil)
 	})
 
