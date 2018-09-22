@@ -6,13 +6,5 @@
       ],
       "lambda": {
         "memory": 128
-      },
-      "stages": {
-        "production": {
-          "domain": "api.modernbaby.online"
-        },
-        "staging": {
-          "domain": "api-staging.modernbaby.online"
-        }
       }
 }
