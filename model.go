@@ -9,8 +9,9 @@ import (
 )
 
 var db *mgo.Database
+var clientsConnection = "clients"
 
-func Connect() {
+func connect() {
 	session, err := mgo.Dial("mongodb://modernbaby:" + db_password + ".mlab.com:11963/modernbaby")
 	if err != nil {
 		log.Fatal(err)
@@ -18,9 +19,16 @@ func Connect() {
 	db = session.DB("modernbaby")
 }
 
-func insertToDB(client client) {
-	Connect()
-	db.C("clients").Insert(&client)
+func saveClient(client client) {
+	connect()
+	db.C(clientsConnection).Insert(&client)
+}
+
+func findById(id string) (client, error) {
+	connect()
+	var client client
+	err := db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&client)
+	return client, err
 }
 
 type appointment struct {
