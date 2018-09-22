@@ -30,9 +30,13 @@ func main() {
 		saveClient(test1)
 		next(nil)
 	})
+
+	// "/get-client?id=XXXXXXXXXX"
 	app.Use("/get-client", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		client, _ := findById("5ba6a7d13a858d32cc93e20c")
-		logger.Info(client.Name)
+		id := string(ctx.QueryArgs().Peek("id"))
+		client, _ := findById(id)
+		ctx.SetContentType("application/json")
+		ctx.SetBodyString(serialize(client))
 		next(nil)
 	})
 

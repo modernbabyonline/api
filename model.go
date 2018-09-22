@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
@@ -52,4 +53,9 @@ type client struct {
 	AgencyName      string
 	ReferrerName    string
 	ReferrerEmail   string
+}
+
+func serialize(v interface{}) string {
+	serialized, _ := json.Marshal(v)
+	return string(serialized)
 }
