@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"github.com/valyala/fasthttp"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func main() {
@@ -21,6 +22,12 @@ func main() {
 		ctx.Response.Header.Add("Content-Type", "application/json")
 		ctx.SetBodyString(`{"foo": "bar"}`)
 		ctx.SetStatusCode(200)
+		next(nil)
+	})
+
+	app.Use("/create-db", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		test1 := client{ID: bson.NewObjectId(), Name: "John Snow"}
+		insertToDB(test1)
 		next(nil)
 	})
 
