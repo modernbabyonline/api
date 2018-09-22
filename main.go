@@ -20,9 +20,9 @@ func main() {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	logger.SetOutput(os.Stdout)
 
-	app.Get("/json", func(ctx *fasthttp.RequestCtx, next func(error)) {
+	app.Post("/webhook", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		ctx.Response.Header.Add("Content-Type", "application/json")
-		ctx.SetBodyString(`{"foo": "bar"}`)
+		ctx.SetBodyString(``)
 		ctx.SetStatusCode(200)
 		next(nil)
 	})
@@ -154,7 +154,9 @@ func main() {
 			"path":        cast.ToString(ctx.Path()),
 			"status_code": ctx.Response.StatusCode(),
 			"request_ip":  ctx.RemoteIP(),
+			"body":        cast.ToString(ctx.Request.Body()),
 		}).Info("Request")
+		//ans := parseCalendlyJSON(cast.ToString(ctx.Request.Body()))
 	})
 
 	port := os.Getenv("PORT")
