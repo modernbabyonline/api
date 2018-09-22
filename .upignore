@@ -1,0 +1,7 @@
+/fixtures
+/vendor
+*.go
+*.lock
+*.toml
+*.yml
+api
