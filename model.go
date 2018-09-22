@@ -11,6 +11,7 @@ import (
 
 var db *mgo.Database
 var clientsConnection = "clients"
+var appointmentsConnection = "appointments"
 
 func connect() {
 	session, err := mgo.Dial("mongodb://modernbaby:" + db_password + ".mlab.com:11963/modernbaby")
@@ -25,15 +26,27 @@ func saveClient(client client) {
 	db.C(clientsConnection).Insert(&client)
 }
 
-func findById(id string) (client, error) {
+func findClientById(id string) client {
 	connect()
 	var client client
-	err := db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&client)
-	return client, err
+	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&client)
+	return client
+}
+
+func saveAppointment(apt appointment) {
+	connect()
+	db.C(appointmentsConnection).Insert(&apt)
+}
+
+func findAppointmentById(id string) appointment {
+	connect()
+	var apt appointment
+	db.C(appointmentsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
+	return apt
 }
 
 type appointment struct {
-	ID        int
+	ID        bson.ObjectId `bson:"_id"`
 	Type      string
 	Time      time.Time
 	Items     []struct{}

@@ -34,9 +34,24 @@ func main() {
 	// "/get-client?id=XXXXXXXXXX"
 	app.Use("/get-client", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
-		client, _ := findById(id)
+		client := findClientById(id)
 		ctx.SetContentType("application/json")
 		ctx.SetBodyString(serialize(client))
+		next(nil)
+	})
+
+	app.Use("/save-appointment", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		test1 := appointment{ID: bson.NewObjectId()}
+		saveAppointment(test1)
+		next(nil)
+	})
+
+	// "/get-appointment?id=XXXXXXXXXX"
+	app.Use("/get-appointment", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		id := string(ctx.QueryArgs().Peek("id"))
+		apt := findAppointmentById(id)
+		ctx.SetContentType("application/json")
+		ctx.SetBodyString(serialize(apt))
 		next(nil)
 	})
 
