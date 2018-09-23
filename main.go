@@ -112,6 +112,27 @@ func main() {
 		next(nil)
 	})
 
+	app.Get("/search", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		args := ctx.QueryArgs()
+		var client client
+		if args.Has("name") {
+
+		} else if args.Has("email") {
+			client, err := findClientByEmail(string(args.Peek("email")))
+			logger.WithFields(logrus.Fields{
+				"Error":  err.Error,
+				"Client": client,
+			}).Info("Request")
+		} else if args.Has("") {
+
+		}
+
+		ctx.SetContentType("application/json")
+		ctx.SetBodyString(serialize(client))
+		ctx.SetStatusCode(200)
+		next(nil)
+	})
+
 	app.Use("/", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		logger.WithFields(logrus.Fields{
 			"method":      cast.ToString(ctx.Method()),

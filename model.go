@@ -33,6 +33,13 @@ func findClientById(id string) client {
 	return client
 }
 
+func findClientByEmail(email string) (client, error) {
+	connect()
+	var client client
+	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&client)
+	return client, err
+}
+
 func saveAppointment(apt appointment) {
 	connect()
 	db.C(appointmentsConnection).Insert(&apt)
