@@ -2,7 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
+	"math/big"
 	"time"
 
 	mgo "gopkg.in/mgo.v2"
@@ -31,11 +34,19 @@ func updateClient(client client) {
 	db.C(clientsConnection).Update(bson.M{"_id": client.ID}, client)
 }
 
-func findClientById(id string) client {
+func findClientById(id string) (client, error) {
 	connect()
 	var clientInfo client
-	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&clientInfo)
-	return clientInfo
+	hexNum := new(big.Int)
+	_, err := hexNum.SetString(id, 16)
+	fmt.Println(err)
+	//_, err := id.(bson.ObjectId)
+	if !err {
+		return client{}, errors.New("Not a hex number")
+	}
+	hex := bson.ObjectIdHex(id)
+	db.C(clientsConnection).FindId(hex).One(&clientInfo)
+	return clientInfo, nil
 }
 
 func findClientByEmail(email string) ([]client, error) {
