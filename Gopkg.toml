@@ -46,4 +46,3 @@
 
 [metadata.heroku]
   root-package = "github.com/modernbabyonline/api"
-  
