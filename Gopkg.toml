@@ -37,10 +37,6 @@
   branch = "master"
 
 [[constraint]]
-  name = "github.com/spf13/cast"
-  branch = "master"
-
-[[constraint]]
   name = "github.com/tidwall/gjson"
   branch = "master"
   

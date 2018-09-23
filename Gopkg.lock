@@ -2,12 +2,28 @@
 
 
 [[projects]]
+  digest = "1:c3da9c1e5421d1a4b03d2579d6fa98b2d807fba21a2295d4667e476603e77f84"
+  name = "github.com/apibillme/auth0"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "76f7680d1e88ee889bb58540054b2cf7b2cb8bfe"
+  version = "1.0.0"
+
+[[projects]]
   branch = "cors"
   digest = "1:bde212e8110fee26d99ab85e6748f27a975203b134a36ddc3ab746b02220e57d"
   name = "github.com/apibillme/restserve"
   packages = ["."]
   pruneopts = "UT"
   revision = "4a5ffc917c5792e38bae3852d6423f7467bf2632"
+
+[[projects]]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  pruneopts = "UT"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -65,6 +81,31 @@
   revision = "b729f2633dfe35f4d1d8a32385f6685610ce1cb5"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ac9c9a70a48046f6217bef542e301fd999ec00e4cb8cf1efe0ee226fd18d04c9"
+  name = "github.com/lestrrat-go/jwx"
+  packages = [
+    "internal/base64",
+    "internal/option",
+    "jwa",
+    "jwk",
+    "jws",
+    "jws/sign",
+    "jws/verify",
+    "jwt",
+  ]
+  pruneopts = "UT"
+  revision = "835c06337fdee874458415123f464518b6eeab52"
+
+[[projects]]
+  branch = "master"
+  digest = "1:992a4e430ab23874d31778dc2a17ba41e7733a9cfd151d1ee8476b46a828e7f5"
+  name = "github.com/lestrrat-go/pdebug"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "39f9a71bcabe9432cbdfe4d3d33f41988acd2ce6"
+
+[[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
   name = "github.com/magiconair/properties"
   packages = ["."]
@@ -116,12 +157,12 @@
   version = "v1.1.2"
 
 [[projects]]
-  branch = "master"
   digest = "1:516e71bed754268937f57d4ecb190e01958452336fa73dbac880894164e91c1f"
   name = "github.com/spf13/cast"
   packages = ["."]
   pruneopts = "UT"
   revision = "8965335b8c7107321228e3e3702cab9832751bac"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:68ea4e23713989dc20b1bded5d9da2c5f9be14ff9885beef481848edd18c26cb"
@@ -149,6 +190,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:3297205be37afe3f25875b99ad48babe2aebb6e0cf61631d6d9851ecb266370e"
+  name = "github.com/tidwall/btree"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9876f1454cf0993a53d74c27196993e345f50dd1"
+
+[[projects]]
+  digest = "1:0d52ec71bbf60ef362ba12db486a7639acdc09e703c93c36c43a7844d071b1ce"
+  name = "github.com/tidwall/buntdb"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2da7c106683f522198cdf55ed8db42b374de50d7"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
   digest = "1:2cab41f59638fdb77dda96ab4f9b5860ef30f48967557254eba127e43c756f2e"
   name = "github.com/tidwall/gjson"
   packages = ["."]
@@ -157,11 +214,38 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:403222dac436240f4a747c4ced09c1d5884082d920f151ea6c19abf7a75d4e7c"
+  name = "github.com/tidwall/grect"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ba9a043346eba55344e40d66a5e74cfda3a9d293"
+
+[[projects]]
+  branch = "master"
   digest = "1:d3f968e2a2c9f8506ed44b01b605ade0176ba6cf73ff679073e77cfdef2c0d55"
   name = "github.com/tidwall/match"
   packages = ["."]
   pruneopts = "UT"
   revision = "1731857f09b1f38450e2c12409748407822dc6be"
+
+[[projects]]
+  branch = "master"
+  digest = "1:54fec16397c72e6ecb5e61309e369517d4ea7aaee4d97454c36075539039ad85"
+  name = "github.com/tidwall/rtree"
+  packages = [
+    ".",
+    "base",
+  ]
+  pruneopts = "UT"
+  revision = "6cd427091e0e662cb4f8e2c9eb1a41e1c46ff0d3"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1b885e925ee7c05565b3178a4fa818bf33885878344d8629ac433a5db99d58e4"
+  name = "github.com/tidwall/tinyqueue"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1e39f55115634cad2c504631c8bfcc292f2c9c55"
 
 [[projects]]
   digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
@@ -251,10 +335,12 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/apibillme/auth0",
     "github.com/apibillme/restserve",
     "github.com/sirupsen/logrus",
     "github.com/spf13/cast",
     "github.com/spf13/viper",
+    "github.com/tidwall/buntdb",
     "github.com/tidwall/gjson",
     "github.com/valyala/fasthttp",
     "gopkg.in/mailgun/mailgun-go.v1",
