@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/apibillme/auth0"
 	"github.com/apibillme/restserve"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
@@ -75,19 +74,19 @@ func main() {
 		next(nil)
 	})
 
-	// Validatation middleware
-	app.Use("/", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		jwkEndpoint := "https://modernbabyonline.auth0.com/.well-known/jwks.json"
-		audience := "https://api.modernbabyonline.online/"
-		issuer := "https://modernbabyonline.auth0.com/"
-		_, err := auth0.Validate(db, jwkEndpoint, audience, issuer, ctx)
-		if err != nil {
-			ctx.SetStatusCode(401)
-			ctx.SetBodyString(`{"error":"` + cast.ToString(err) + `"}`)
-		} else {
-			next(nil)
-		}
-	})
+	// // Validatation middleware
+	// app.Use("/", func(ctx *fasthttp.RequestCtx, next func(error)) {
+	// 	jwkEndpoint := "https://modernbabyonline.auth0.com/.well-known/jwks.json"
+	// 	audience := "https://api.modernbabyonline.online/"
+	// 	issuer := "https://modernbabyonline.auth0.com/"
+	// 	_, err := auth0.Validate(db, jwkEndpoint, audience, issuer, ctx)
+	// 	if err != nil {
+	// 		ctx.SetStatusCode(401)
+	// 		ctx.SetBodyString(`{"error":"` + cast.ToString(err) + `"}`)
+	// 	} else {
+	// 		next(nil)
+	// 	}
+	// })
 
 	// PUT "/clients"
 	app.Put("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
