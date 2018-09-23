@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -21,9 +22,33 @@ func main() {
 	logger.SetOutput(os.Stdout)
 
 	app.Post("/webhook", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		ctx.Response.Header.Add("Content-Type", "application/json")
-		ctx.SetBodyString(``)
-		ctx.SetStatusCode(200)
+
+		fmt.Printf("Inside the webhook method")
+		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+
+		itemsRequested := result.Get("body.event.questions_and_answers.#.answer").Array()
+		items := []checklistItem{}
+		for _, item := range itemsRequested {
+			items = append(items, checklistItem{Item: item.String(), Status: 1})
+		}
+
+		timeStamp, err := time.Parse(time.RFC3339, result.Get("body.event.start_time_pretty").String())
+		if err != nil {
+			ctx.SetStatusCode(500)
+		}
+
+		email := result.Get("body.event.extendedAssignedTo.email").String()
+		client, _ := findClientByEmail(email)
+
+		appt := appointment{
+			ID:        bson.NewObjectId(),
+			ClientID:  client.ID.Hex(),
+			Type:      result.Get("body.event.name").String(),
+			Time:      timeStamp,
+			Items:     items,
+			Volunteer: result.Get("body.event.assignedTo").String(),
+		}
+		saveAppointment(appt)
 		next(nil)
 	})
 

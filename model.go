@@ -51,6 +51,7 @@ func findClientById(id string) (client, error) {
 
 func findClientByEmail(email string) ([]client, error) {
 	connect()
+<<<<<<< HEAD
 	clientInfo := make([]client, 0)
 	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).All(&clientInfo)
 	return clientInfo, err
@@ -70,6 +71,11 @@ func findClientsByPartialName(name string) ([]client, error) {
 	regexStr := `.*` + name + `.*`
 	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{regexStr, "i"}}}).All(&clientInfo)
 	return clientInfo, err
+=======
+	var client client
+	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&client)
+	return client, err
+>>>>>>> api endpoints
 }
 
 func saveAppointment(apt appointment) {
@@ -85,8 +91,8 @@ func findAppointmentById(id string) appointment {
 }
 
 type checklistItem struct {
-	Item   string
-	Status int
+	Item   string // checklist items
+	Status int    // 0 = not requested, 1 = requested but not available, 2 = requested and available
 }
 
 type appointment struct {
@@ -96,6 +102,7 @@ type appointment struct {
 	Time      time.Time
 	Items     []checklistItem
 	Volunteer string
+	Status    string // ON, RESCHEDULED, CANCELLED
 }
 
 type client struct {
