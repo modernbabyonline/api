@@ -33,15 +33,15 @@ func updateClient(client client) {
 
 func findClientById(id string) client {
 	connect()
-	var client client
-	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&client)
-	return client
+	var clientInfo client
+	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&clientInfo)
+	return clientInfo
 }
 
-func findClientByEmail(email string) (client, error) {
+func findClientByEmail(email string) ([]client, error) {
 	connect()
-	var clientInfo client
-	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&clientInfo)
+	clientInfo := make([]client, 0)
+	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).All(&clientInfo)
 	return clientInfo, err
 }
 
@@ -56,7 +56,7 @@ func findClientsByPartialName(name string) ([]client, error) {
 	connect()
 	clientInfo := make([]client, 0)
 	// Construct RegEx string
-	regexStr := /*`.*` +*/ name // + `.*`
+	regexStr := `.*` + name + `.*`
 	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{regexStr, "i"}}}).All(&clientInfo)
 	return clientInfo, err
 }

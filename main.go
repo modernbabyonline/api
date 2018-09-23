@@ -66,29 +66,35 @@ func main() {
 
 	app.Post("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
-		c := client{
-			ID:          bson.NewObjectId(),
-			DateCreated: time.Now(),
-			Status:      "PENDING",
-			ClientName:  result.Get("clientName").String(),
-			ClientEmail: result.Get("clientEmail").String(),
-			ClientPhone: result.Get("clientPhone").String(),
-			ClientDOB:   result.Get("clientDoB").String(),
-			BabyDOB:     result.Get("babyDoB").String(),
-			DemographicInfo: map[string]bool{
-				"under19":               result.Get("socioL19").Bool(),
-				"unemployed":            result.Get("socioUnemployed").Bool(),
-				"newToCanada":           result.Get("socioNewToCanada").Bool(),
-				"childWithSpecialNeeds": result.Get("socioSpecial").Bool(),
-				"homeless":              result.Get("socioHomeless").Bool(),
-			},
-			DemographicOther: result.Get("socioOther").String(),
-			ClientIncome:     result.Get("clientInc").Int(),
-			ReferrerName:     result.Get("referrerName").String(),
-			ReferrerEmail:    result.Get("referrerEmail").String(),
+		existingClients, _ := findClientByEmail(result.Get("clientEmail").String())
+		if len(existingClients) == 0 {
+			c := client{
+				ID:          bson.NewObjectId(),
+				DateCreated: time.Now(),
+				Status:      "PENDING",
+				ClientName:  result.Get("clientName").String(),
+				ClientEmail: result.Get("clientEmail").String(),
+				ClientPhone: result.Get("clientPhone").String(),
+				ClientDOB:   result.Get("clientDoB").String(),
+				BabyDOB:     result.Get("babyDoB").String(),
+				DemographicInfo: map[string]bool{
+					"under19":               result.Get("socioL19").Bool(),
+					"unemployed":            result.Get("socioUnemployed").Bool(),
+					"newToCanada":           result.Get("socioNewToCanada").Bool(),
+					"childWithSpecialNeeds": result.Get("socioSpecial").Bool(),
+					"homeless":              result.Get("socioHomeless").Bool(),
+				},
+				DemographicOther: result.Get("socioOther").String(),
+				ClientIncome:     result.Get("clientInc").Int(),
+				ReferrerName:     result.Get("referrerName").String(),
+				ReferrerEmail:    result.Get("referrerEmail").String(),
+			}
+			saveClient(c)
+			ctx.SetBodyString(serialize(c))
+			ctx.SetStatusCode(200)
+		} else {
+			ctx.SetStatusCode(400)
 		}
-		saveClient(c)
-		ctx.SetBodyString(serialize(c))
 		next(nil)
 	})
 
@@ -149,8 +155,7 @@ func main() {
 		if args.Has("name") {
 			clientInfo, _ = findClientsByPartialName(string(args.Peek("name")))
 		} else if args.Has("email") {
-			tempInfo, _ := findClientByEmail(string(args.Peek("email")))
-			clientInfo = []client{tempInfo}
+			clientInfo, _ = findClientByEmail(string(args.Peek("email")))
 		}
 		ctx.SetContentType("application/json")
 		ctx.SetBodyString(serialize(clientInfo))
