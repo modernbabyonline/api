@@ -62,6 +62,7 @@ func main() {
 			ctx.SetStatusCode(404)
 			next(nil)
 		}
+		ctx.SetStatusCode(200)
 		next(nil)
 	})
 
