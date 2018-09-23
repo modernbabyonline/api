@@ -2,13 +2,16 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"time"
 
+	"github.com/apibillme/auth0"
 	"github.com/apibillme/restserve"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
+	"github.com/tidwall/buntdb"
 	"github.com/tidwall/gjson"
 	"github.com/valyala/fasthttp"
 	"gopkg.in/mgo.v2/bson"
@@ -16,6 +19,12 @@ import (
 
 func main() {
 	app := restserve.New(restserve.CorsOptions{})
+
+	db, err := buntdb.Open(":memory:")
+	if err != nil {
+		log.Panic(err)
+	}
+	defer db.Close()
 
 	// setup logging
 	logger := logrus.New()
@@ -57,6 +66,20 @@ func main() {
 		}
 		saveAppointment(appt)
 		next(nil)
+	})
+
+	// Validatation middleware
+	app.Use("/", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		jwkEndpoint := "https://modernbabyonline.auth0.com/.well-known/jwks.json"
+		audience := "https://api.modernbabyonline.online/"
+		issuer := "https://modernbabyonline.auth0.com/"
+		_, err := auth0.Validate(db, jwkEndpoint, audience, issuer, ctx)
+		if err != nil {
+			ctx.SetStatusCode(401)
+			ctx.SetBodyString(`{"error":"` + cast.ToString(err) + `"}`)
+		} else {
+			next(nil)
+		}
 	})
 
 	// PUT "/clients"

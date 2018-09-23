@@ -3,11 +3,23 @@ package main
 import (
 	"fmt"
 
+	"github.com/spf13/cast"
+
+	"github.com/spf13/viper"
 	mailgun "gopkg.in/mailgun/mailgun-go.v1"
 )
 
 func sendMakeApptEmail(recipient string) {
-	mg := mailgun.NewMailgun("mail.modernbaby.online", mailgun_private_key, mailgun_public_key)
+	viper.AutomaticEnv()
+	viper.SetConfigName("account")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("fatal error config file: %s", err))
+	}
+	mailgunPrivateKey := cast.ToString(viper.Get("mailgun_private_key"))
+	mailgunPublicKey := cast.ToString(viper.Get("mailgun_public_key"))
+	mg := mailgun.NewMailgun("mail.modernbaby.online", mailgunPrivateKey, mailgunPublicKey)
 	sender := "BabyGoRound <mailgun@mail.modernbaby.online>"
 	subject := "Book Your Appointment To Pick Up Baby Gear"
 	body := ""
