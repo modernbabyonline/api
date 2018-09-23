@@ -107,14 +107,22 @@ func main() {
 		next(nil)
 	})
 
-	app.Use("/save-appointment", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		test1 := appointment{ID: bson.NewObjectId()}
-		saveAppointment(test1)
+	app.Post("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+		appt := appointment{
+			ID:        bson.NewObjectId(),
+			ClientID:  findClientById(appt.ID.Hex()).ID,
+			Type:      gjson.Get(result, "body.event.name").String(),
+			Time:      time.Parse(gjson.Get(result, "body.event.pretty_start_time")),
+			Items:     gjson.Get(result, "body.event.questions_and_answers.#.answer").Array(),
+			Volunteer: gjson.Get(result, "body.event.assigned_to").String(),
+		}
+		saveAppointment(appt)
 		next(nil)
 	})
 
-	// "/get-appointment?id=XXXXXXXXXX"
-	app.Use("/get-appointment", func(ctx *fasthttp.RequestCtx, next func(error)) {
+	// "/appointments
+	app.Get("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
 		apt := findAppointmentById(id)
 		ctx.SetContentType("application/json")
@@ -156,7 +164,6 @@ func main() {
 			"request_ip":  ctx.RemoteIP(),
 			"body":        cast.ToString(ctx.Request.Body()),
 		}).Info("Request")
-		//ans := parseCalendlyJSON(cast.ToString(ctx.Request.Body()))
 	})
 
 	port := os.Getenv("PORT")

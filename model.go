@@ -9,6 +9,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+var db_password = ""
 var db *mgo.Database
 var clientsConnection = "clients"
 var appointmentsConnection = "appointments"
@@ -75,6 +76,7 @@ func findAppointmentById(id string) appointment {
 
 type appointment struct {
 	ID        bson.ObjectId `bson:"_id"`
+	ClientID  string
 	Type      string
 	Time      time.Time
 	Items     []struct{}
