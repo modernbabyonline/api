@@ -84,16 +84,22 @@ func main() {
 			ReferrerEmail:    result.Get("referrerEmail").String(),
 		}
 		saveClient(c)
-		ctx.SetBodyString(c.ID.Hex())
+		ctx.SetBodyString(serialize(c))
 		next(nil)
 	})
 
 	// "/clients?id=XXXXXXXXXX"
 	app.Get("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		id := string(ctx.QueryArgs().Peek("id"))
-		client := findClientById(id)
+		args := ctx.QueryArgs()
+		var clientInfo client
+		if args.Has("id") {
+			clientInfo = findClientById(string(args.Peek("id")))
+		} else if args.Has("status") {
+			// approvedState = PENDING, APPROVED, DECLINED
+			clientInfo, _ = findClientsByApprovedStatus(string(args.Peek("status")))
+		}
 		ctx.SetContentType("application/json")
-		ctx.SetBodyString(serialize(client))
+		ctx.SetBodyString(serialize(clientInfo))
 		next(nil)
 	})
 
@@ -115,8 +121,22 @@ func main() {
 	app.Get("/search", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		args := ctx.QueryArgs()
 		var clientInfo client
-		if true {
+		if args.Has("name") {
+			clientInfo, _ = findClientsByPartialName(string(args.Peek("name")))
+			logger.WithFields(logrus.Fields{
+				"method":      cast.ToString(ctx.Method()),
+				"path":        cast.ToString(ctx.Path()),
+				"status_code": ctx.Response.StatusCode(),
+				"request_ip":  ctx.RemoteIP(),
+			}).Info("Request")
+		} else if args.Has("email") {
 			clientInfo, _ = findClientByEmail(string(args.Peek("email")))
+			logger.WithFields(logrus.Fields{
+				"method":      cast.ToString(ctx.Method()),
+				"path":        cast.ToString(ctx.Path()),
+				"status_code": ctx.Response.StatusCode(),
+				"request_ip":  ctx.RemoteIP(),
+			}).Info("Request")
 		}
 		ctx.SetContentType("application/json")
 		ctx.SetBodyString(serialize(clientInfo))

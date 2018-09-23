@@ -40,9 +40,25 @@ func findClientById(id string) client {
 
 func findClientByEmail(email string) (client, error) {
 	connect()
-	var client client
-	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&client)
-	return client, err
+	var clientInfo client
+	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&clientInfo)
+	return clientInfo, err
+}
+
+func findClientsByApprovedStatus(status string) (client, error) {
+	connect()
+	var clientInfo client
+	err := db.C(clientsConnection).Find(bson.M{"status": status}).One(&clientInfo)
+	return clientInfo, err
+}
+
+func findClientsByPartialName(name string) (client, error) {
+	connect()
+	var clientInfo client
+	// Construct RegEx string
+	regexStr := "/.*" + name + ".*/"
+	err := db.C(clientsConnection).Find(bson.M{"clientname": regexStr}).One(&clientInfo)
+	return clientInfo, err
 }
 
 func saveAppointment(apt appointment) {
