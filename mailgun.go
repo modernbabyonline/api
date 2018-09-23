@@ -15,7 +15,7 @@ func sendMakeApptEmail(recipient string) {
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("fatal error config file: %s", err))
+		fmt.Println(err)
 	}
 	mailgunPrivateKey := cast.ToString(viper.Get("mailgun_private_key"))
 	mailgunPublicKey := cast.ToString(viper.Get("mailgun_public_key"))
