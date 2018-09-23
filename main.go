@@ -27,14 +27,18 @@ func main() {
 		next(nil)
 	})
 
+	// PUT "/clients?id=XXXXXX"
 	app.Put("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
 		client := findClientById(id)
-
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
 
-		if result.Get("status").Exists() {
-			client.Status = result.Get("status").String()
+		status := result.Get("status")
+		if status.Exists() {
+			if client.Status == "PENDING" && status.String() == "APPROVED" {
+				sendMakeApptEmail(client.ClientEmail)
+			}
+			client.Status = status.String()
 		}
 		if result.Get("clientName").Exists() {
 			client.ClientName = result.Get("clientName").String()

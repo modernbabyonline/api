@@ -30,6 +30,14 @@
   version = "v1.1"
 
 [[projects]]
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   branch = "master"
   digest = "1:e401263ad228a4761a67c1de1438187c769c7bd4733067e9642816e303ba4c2f"
   name = "github.com/sirupsen/logrus"
@@ -101,6 +109,14 @@
   revision = "917fdcba135dcbaccd57425db91723541b4427c8"
 
 [[projects]]
+  digest = "1:c30b57e29c4382537286c27e1e4e9b3fb7aa6a4313d0d80b638884c2c3e75d2d"
+  name = "gopkg.in/mailgun/mailgun-go.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a4002e2df2e8ca2da6a6fbb4a72871b504e49f50"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "v2"
   digest = "1:988de7520a09024d5d94cd99bd545afbf194893994ec759b1cda0a0bbb6adb80"
   name = "gopkg.in/mgo.v2"
@@ -123,6 +139,7 @@
     "github.com/spf13/cast",
     "github.com/tidwall/gjson",
     "github.com/valyala/fasthttp",
+    "gopkg.in/mailgun/mailgun-go.v1",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",
   ]
