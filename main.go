@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 	"time"
@@ -26,11 +25,8 @@ func main() {
 		body := cast.ToString(ctx.Request.Body())
 		removeEvent, _ := regexp.Compile(`\"event\"\:\"invitee\.created\"\,`)
 		validJSONBody := removeEvent.ReplaceAllString(body, "")
-		fmt.Printf(validJSONBody)
 		result := gjson.Parse(validJSONBody)
-		fmt.Println(gjson.Valid(validJSONBody))
 
-		fmt.Printf(result.Get("time").String())
 		itemsRequested := result.Get("payload.questions_and_answers.#.answer").Array()
 		items := []checklistItem{}
 		for _, item := range itemsRequested {
@@ -43,7 +39,6 @@ func main() {
 		}
 
 		clientEmail := gjson.Parse(validJSONBody).Get("payload.invitee.email").String()
-		fmt.Println(clientEmail)
 		clients, _ := findClientByEmail(clientEmail)
 
 		appt := appointment{
@@ -155,6 +150,7 @@ func main() {
 
 	// "/appointments"
 	app.Put("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
+
 		next(nil)
 	})
 
