@@ -1,0 +1,5 @@
+{
+    "DB_PASSWORD": "password",
+    "MAILGUN_PUBLIC_KEY": "key",
+    "MAILGUN_PRIVATE_KEY": "key"
+}

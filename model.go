@@ -2,8 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -14,7 +18,14 @@ var clientsConnection = "clients"
 var appointmentsConnection = "appointments"
 
 func connect() {
-	session, err := mgo.Dial("mongodb://modernbaby:" + db_password + "@ds111963.mlab.com:11963/modernbaby")
+	viper.AutomaticEnv()
+	viper.SetConfigName("account")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("fatal error config file: %s", err))
+	}
+	session, err := mgo.Dial("mongodb://modernbaby:" + cast.ToString(viper.Get("db_password")) + "@ds111963.mlab.com:11963/modernbaby")
 	if err != nil {
 		log.Fatal(err)
 	}
