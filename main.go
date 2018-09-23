@@ -44,15 +44,16 @@ func main() {
 
 		clientEmail := gjson.Parse(validJSONBody).Get("payload.invitee.email").String()
 		fmt.Println(clientEmail)
-		client, _ := findClientByEmail(clientEmail)
+		clients, _ := findClientByEmail(clientEmail)
 
 		appt := appointment{
 			ID:        bson.NewObjectId(),
-			ClientID:  client.ID.Hex(),
+			ClientID:  clients[0].ID.Hex(),
 			Type:      result.Get("payload.event_type.name").String(),
 			Time:      timeStamp,
 			Items:     items,
 			Volunteer: result.Get("payload.event.assignedTo.0").String(),
+			Status:    "SCHEDULED",
 		}
 		saveAppointment(appt)
 		next(nil)
