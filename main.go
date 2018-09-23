@@ -30,7 +30,7 @@ func main() {
 		itemsRequested := result.Get("payload.questions_and_answers.#.answer").Array()
 		items := []checklistItem{}
 		for _, item := range itemsRequested {
-			items = append(items, checklistItem{Item: item.String(), Status: 1})
+			items = append(items, checklistItem{Item: item.String(), Status: "Requested"})
 		}
 
 		timeStamp, err := time.Parse(time.RFC3339, result.Get("payload.event.start_time_pretty").String())
@@ -162,7 +162,21 @@ func main() {
 
 	// "/appointments"
 	app.Put("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		ctx.SetStatusCode(404)
+		id := string(ctx.QueryArgs().Peek("id"))
+		apt := findAppointmentById(id)
+		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+
+		if result.Get("Items").Exists() {
+			itemsRequested := result.Get("Items").Array()
+			items := []checklistItem{}
+			for _, item := range itemsRequested {
+				items = append(items, checklistItem{Item: item.Get("Item").String(), Status: item.Get("Status").String()})
+			}
+			apt.Items = items
+		}
+
+		ctx.SetContentType("application/json")
+		ctx.SetBodyString(serialize(apt))
 		next(nil)
 	})
 
