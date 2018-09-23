@@ -9,7 +9,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var db_password = ""
 var db *mgo.Database
 var clientsConnection = "clients"
 var appointmentsConnection = "appointments"
@@ -53,12 +52,12 @@ func findClientsByApprovedStatus(status string) (client, error) {
 	return clientInfo, err
 }
 
-func findClientsByPartialName(name string) (client, error) {
+func findClientsByPartialName(name string) ([]client, error) {
 	connect()
-	var clientInfo client
+	clientInfo := make([]client, 1)
 	// Construct RegEx string
-	regexStr := "/.*" + name + ".*/"
-	err := db.C(clientsConnection).Find(bson.M{"clientname": regexStr}).One(&clientInfo)
+	regexStr := `.*` + name + `.*`
+	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{regexStr, ""}}}).All(&clientInfo)
 	return clientInfo, err
 }
 
