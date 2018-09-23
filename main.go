@@ -27,7 +27,7 @@ func main() {
 		next(nil)
 	})
 
-	app.Use("/update-client", func(ctx *fasthttp.RequestCtx, next func(error)) {
+	app.Put("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
 		client := findClientById(id)
 
@@ -55,12 +55,12 @@ func main() {
 			client.ClientIncome = result.Get("clientInc").Int()
 		}
 		// TODO doesn't update demographic info or referrer info
-		saveClient(client)
+		updateClient(client)
 		ctx.SetBodyString(client.ID.Hex())
 		next(nil)
 	})
 
-	app.Use("/save-client", func(ctx *fasthttp.RequestCtx, next func(error)) {
+	app.Post("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
 		c := client{
 			ID:          bson.NewObjectId(),
@@ -88,8 +88,8 @@ func main() {
 		next(nil)
 	})
 
-	// "/get-client?id=XXXXXXXXXX"
-	app.Use("/get-client", func(ctx *fasthttp.RequestCtx, next func(error)) {
+	// "/clients?id=XXXXXXXXXX"
+	app.Get("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
 		client := findClientById(id)
 		ctx.SetContentType("application/json")
