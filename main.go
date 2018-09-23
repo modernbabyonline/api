@@ -27,7 +27,7 @@ func main() {
 		next(nil)
 	})
 
-	// PUT "/clients?id=XXXXXX"
+	// PUT "/clients"
 	app.Put("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
 		client, _ := findClientById(id)
@@ -98,7 +98,7 @@ func main() {
 		next(nil)
 	})
 
-	// "/clients
+	// "/clients"
 	app.Get("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		args := ctx.QueryArgs()
 		var clientInfo []client
@@ -121,9 +121,10 @@ func main() {
 		next(nil)
 	})
 
-	// "/appointments
+	// "/appointments"
 	app.Post("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+
 		itemsRequested := result.Get("body.event.questions_and_answers.#.answer").Array()
 		items := []checklistItem{}
 		for _, item := range itemsRequested {
@@ -135,9 +136,12 @@ func main() {
 			ctx.SetStatusCode(500)
 		}
 
+		email := result.Get("body.event.extendedAssignedTo.email").String()
+		client, _ := findClientByEmail(email)
+
 		appt := appointment{
 			ID:        bson.NewObjectId(),
-			ClientID:  "",
+			ClientID:  client.ID.Hex(),
 			Type:      result.Get("body.event.name").String(),
 			Time:      timeStamp,
 			Items:     items,
@@ -147,7 +151,7 @@ func main() {
 		next(nil)
 	})
 
-	// "/appointments
+	// "/appointments"
 	app.Get("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
 		apt := findAppointmentById(id)
@@ -156,6 +160,7 @@ func main() {
 		next(nil)
 	})
 
+	// "/search"
 	app.Get("/search", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		args := ctx.QueryArgs()
 		var clientInfo []client
