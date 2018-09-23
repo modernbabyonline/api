@@ -39,18 +39,29 @@ func main() {
 		}
 
 		clientEmail := gjson.Parse(validJSONBody).Get("payload.invitee.email").String()
-		clients, _ := findClientByEmail(clientEmail)
+		clients, err := findClientByEmail(clientEmail)
 
-		appt := appointment{
-			ID:        bson.NewObjectId(),
-			ClientID:  clients[0].ID.Hex(),
-			Type:      result.Get("payload.event_type.name").String(),
-			Time:      timeStamp,
-			Items:     items,
-			Volunteer: result.Get("payload.event.assignedTo.0").String(),
-			Status:    "SCHEDULED",
+		if len(clients) == 0 {
+			ctx.SetStatusCode(400)
+			next(nil)
+		} else {
+			appt := appointment{
+				ID:        bson.NewObjectId(),
+				ClientID:  clients[0].ID.Hex(),
+				Type:      result.Get("payload.event_type.name").String(),
+				Time:      timeStamp,
+				Items:     items,
+				Volunteer: result.Get("payload.event.assignedTo.0").String(),
+				Status:    "SCHEDULED",
+			}
+			saveAppointment(appt)
+			next(nil)
 		}
-		saveAppointment(appt)
+
+		if err != nil {
+			ctx.SetStatusCode(404)
+			next(nil)
+		}
 		next(nil)
 	})
 
