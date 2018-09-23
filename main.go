@@ -173,6 +173,7 @@ func main() {
 				items = append(items, checklistItem{Item: item.Get("Item").String(), Status: item.Get("Status").String()})
 			}
 			apt.Items = items
+			updateAppointment(apt)
 		}
 
 		ctx.SetContentType("application/json")

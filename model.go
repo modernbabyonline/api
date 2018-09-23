@@ -70,6 +70,11 @@ func saveAppointment(apt appointment) {
 	db.C(appointmentsConnection).Insert(&apt)
 }
 
+func updateAppointment(apt appointment) {
+	connect()
+	db.C(appointmentsConnection).Update(bson.M{"_id": apt.ID}, apt)
+}
+
 func findAppointmentById(id string) appointment {
 	connect()
 	var apt appointment
