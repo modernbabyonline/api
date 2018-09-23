@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 	"time"
@@ -26,11 +25,8 @@ func main() {
 		body := cast.ToString(ctx.Request.Body())
 		removeEvent, _ := regexp.Compile(`\"event\"\:\"invitee\.created\"\,`)
 		validJSONBody := removeEvent.ReplaceAllString(body, "")
-		fmt.Printf(validJSONBody)
 		result := gjson.Parse(validJSONBody)
-		fmt.Println(gjson.Valid(validJSONBody))
 
-		fmt.Printf(result.Get("time").String())
 		itemsRequested := result.Get("payload.questions_and_answers.#.answer").Array()
 		items := []checklistItem{}
 		for _, item := range itemsRequested {
@@ -43,19 +39,30 @@ func main() {
 		}
 
 		clientEmail := gjson.Parse(validJSONBody).Get("payload.invitee.email").String()
-		fmt.Println(clientEmail)
-		clients, _ := findClientByEmail(clientEmail)
+		clients, err := findClientByEmail(clientEmail)
 
-		appt := appointment{
-			ID:        bson.NewObjectId(),
-			ClientID:  clients[0].ID.Hex(),
-			Type:      result.Get("payload.event_type.name").String(),
-			Time:      timeStamp,
-			Items:     items,
-			Volunteer: result.Get("payload.event.assignedTo.0").String(),
-			Status:    "SCHEDULED",
+		if len(clients) == 0 {
+			ctx.SetStatusCode(400)
+			next(nil)
+		} else {
+			appt := appointment{
+				ID:        bson.NewObjectId(),
+				ClientID:  clients[0].ID.Hex(),
+				Type:      result.Get("payload.event_type.name").String(),
+				Time:      timeStamp,
+				Items:     items,
+				Volunteer: result.Get("payload.event.assignedTo.0").String(),
+				Status:    "SCHEDULED",
+			}
+			saveAppointment(appt)
+			next(nil)
 		}
-		saveAppointment(appt)
+
+		if err != nil {
+			ctx.SetStatusCode(404)
+			next(nil)
+		}
+		ctx.SetStatusCode(200)
 		next(nil)
 	})
 
@@ -155,7 +162,11 @@ func main() {
 
 	// "/appointments"
 	app.Put("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
+<<<<<<< HEAD
 		ctx.SetStatusCode(404)
+=======
+
+>>>>>>> removed print statements in webhook endpoint
 		next(nil)
 	})
 
