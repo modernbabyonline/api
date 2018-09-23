@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"strconv"
 	"time"
 
 	mgo "gopkg.in/mgo.v2"
@@ -31,11 +32,17 @@ func updateClient(client client) {
 	db.C(clientsConnection).Update(bson.M{"_id": client.ID}, client)
 }
 
-func findClientById(id string) client {
+func findClientById(id string) (client, error) {
 	connect()
 	var clientInfo client
-	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&clientInfo)
-	return clientInfo
+	_, err := strconv.ParseUInt(id, 16, 64)
+	//_, err := id.(bson.ObjectId)
+	if err != nil {
+		return client{}, err
+	}
+	hex := bson.ObjectIdHex(id)
+	db.C(clientsConnection).FindId(hex).One(&clientInfo)
+	return clientInfo, nil
 }
 
 func findClientByEmail(email string) ([]client, error) {
