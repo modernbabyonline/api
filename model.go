@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"time"
 
 	"github.com/spf13/cast"
@@ -42,18 +44,40 @@ func updateClient(client client) {
 	db.C(clientsConnection).Update(bson.M{"_id": client.ID}, client)
 }
 
-func findClientById(id string) client {
+func findClientById(id string) (client, error) {
 	connect()
-	var client client
-	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&client)
-	return client
+	var clientInfo client
+	hexNum := new(big.Int)
+	_, err := hexNum.SetString(id, 16)
+	fmt.Println(err)
+	//_, err := id.(bson.ObjectId)
+	if !err {
+		return client{}, errors.New("Not a hex number")
+	}
+	hex := bson.ObjectIdHex(id)
+	db.C(clientsConnection).FindId(hex).One(&clientInfo)
+	return clientInfo, nil
 }
 
-func findClientByEmail(email string) (client, error) {
+func findClientByEmail(email string) ([]client, error) {
 	connect()
-	var client client
-	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&client)
-	return client, err
+	clientInfo := make([]client, 0)
+	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).All(&clientInfo)
+	return clientInfo, err
+}
+func findClientsByApprovedStatus(status string) ([]client, error) {
+	connect()
+	clientInfo := make([]client, 0)
+	err := db.C(clientsConnection).Find(bson.M{"status": status}).All(&clientInfo)
+	return clientInfo, err
+}
+func findClientsByPartialName(name string) ([]client, error) {
+	connect()
+	clientInfo := make([]client, 0)
+	// Construct RegEx string
+	regexStr := `.*` + name + `.*`
+	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{regexStr, "i"}}}).All(&clientInfo)
+	return clientInfo, err
 }
 
 func saveAppointment(apt appointment) {
@@ -68,12 +92,19 @@ func findAppointmentById(id string) appointment {
 	return apt
 }
 
+type checklistItem struct {
+	Item   string // checklist items
+	Status int    // 0 = not requested, 1 = requested but not available, 2 = requested and available
+}
+
 type appointment struct {
 	ID        bson.ObjectId `bson:"_id"`
+	ClientID  string
 	Type      string
 	Time      time.Time
-	Items     []struct{}
+	Items     []checklistItem
 	Volunteer string
+	Status    string // SCHEDULED, RESCHEDULED, CANCELLED
 }
 
 type client struct {

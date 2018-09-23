@@ -57,6 +57,14 @@
   version = "v1.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:f44d34fda864bed6d6c71514cd40b2ee097e6e67f745d5d014113e1faa5af8b7"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b729f2633dfe35f4d1d8a32385f6685610ce1cb5"
+
+[[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
   name = "github.com/magiconair/properties"
   packages = ["."]
@@ -81,12 +89,20 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   branch = "master"
-  digest = "1:e401263ad228a4761a67c1de1438187c769c7bd4733067e9642816e303ba4c2f"
+  digest = "1:75e73f6c15ebe24ea77d687138bb6fabb018061a95a17c0d0acd3ef9ea30ea49"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f3df9aeffda7c12bd9f5a03f9251d75d35993165"
+  revision = "33a1e118e113c7d1dd24a80f80670864cd598519"
 
 [[projects]]
   digest = "1:6a4a11ba764a56d2758899ec6f3848d24698d48442ebce85ee7a3f63284526cd"
@@ -157,7 +173,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7902fb96fefb493a37a7937c0d85356662de477c833dc3f4a66a80a4c05e8a19"
+  digest = "1:9aadc4ceaf99c20970db34777086d60315f22f315905ae21f885c584de833de7"
   name = "github.com/valyala/fasthttp"
   packages = [
     ".",
@@ -165,7 +181,7 @@
     "stackless",
   ]
   pruneopts = "UT"
-  revision = "c6fd90e432cc0afd32a031d778e86674af3f010b"
+  revision = "1ba43613e8dfb7ee0b7f974df9157dfb6f21c625"
 
 [[projects]]
   branch = "master"
@@ -173,18 +189,18 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "0709b304e793a5edb4a2c0145f281ecdc20838a4"
+  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
 
 [[projects]]
   branch = "master"
-  digest = "1:0ed1788dc3845fa86e9ade2183538e920adf76fb9f8760e69236fa2cb0d7c9d9"
+  digest = "1:4d2869b8df54b3a687c426758d0891720e8bedfa6ff5d472671ce1d31d29bdfb"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "917fdcba135dcbaccd57425db91723541b4427c8"
+  revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
 
 [[projects]]
   digest = "1:8029e9743749d4be5bc9f7d42ea1659471767860f0cdc34d37c3111bd308a295"
@@ -200,6 +216,14 @@
   pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
+
+[[projects]]
+  digest = "1:c30b57e29c4382537286c27e1e4e9b3fb7aa6a4313d0d80b638884c2c3e75d2d"
+  name = "gopkg.in/mailgun/mailgun-go.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a4002e2df2e8ca2da6a6fbb4a72871b504e49f50"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "v2"
@@ -233,6 +257,7 @@
     "github.com/spf13/viper",
     "github.com/tidwall/gjson",
     "github.com/valyala/fasthttp",
+    "gopkg.in/mailgun/mailgun-go.v1",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",
   ]

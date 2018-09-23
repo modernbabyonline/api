@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/apibillme/restserve"
@@ -20,21 +22,55 @@ func main() {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	logger.SetOutput(os.Stdout)
 
-	app.Get("/json", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		ctx.Response.Header.Add("Content-Type", "application/json")
-		ctx.SetBodyString(`{"foo": "bar"}`)
-		ctx.SetStatusCode(200)
+	app.Post("/webhook", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		body := cast.ToString(ctx.Request.Body())
+		removeEvent, _ := regexp.Compile(`\"event\"\:\"invitee\.created\"\,`)
+		validJSONBody := removeEvent.ReplaceAllString(body, "")
+		fmt.Printf(validJSONBody)
+		result := gjson.Parse(validJSONBody)
+		fmt.Println(gjson.Valid(validJSONBody))
+
+		fmt.Printf(result.Get("time").String())
+		itemsRequested := result.Get("payload.questions_and_answers.#.answer").Array()
+		items := []checklistItem{}
+		for _, item := range itemsRequested {
+			items = append(items, checklistItem{Item: item.String(), Status: 1})
+		}
+
+		timeStamp, err := time.Parse(time.RFC3339, result.Get("payload.event.start_time_pretty").String())
+		if err != nil {
+			ctx.SetStatusCode(500)
+		}
+
+		clientEmail := gjson.Parse(validJSONBody).Get("payload.invitee.email").String()
+		fmt.Println(clientEmail)
+		clients, _ := findClientByEmail(clientEmail)
+
+		appt := appointment{
+			ID:        bson.NewObjectId(),
+			ClientID:  clients[0].ID.Hex(),
+			Type:      result.Get("payload.event_type.name").String(),
+			Time:      timeStamp,
+			Items:     items,
+			Volunteer: result.Get("payload.event.assignedTo.0").String(),
+			Status:    "SCHEDULED",
+		}
+		saveAppointment(appt)
 		next(nil)
 	})
 
+	// PUT "/clients"
 	app.Put("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
-		client := findClientById(id)
-
+		client, _ := findClientById(id)
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
 
-		if result.Get("status").Exists() {
-			client.Status = result.Get("status").String()
+		status := result.Get("status")
+		if status.Exists() {
+			if client.Status == "PENDING" && status.String() == "APPROVED" {
+				sendMakeApptEmail(client.ClientEmail)
+			}
+			client.Status = status.String()
 		}
 		if result.Get("clientName").Exists() {
 			client.ClientName = result.Get("clientName").String()
@@ -62,49 +98,68 @@ func main() {
 
 	app.Post("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
-		c := client{
-			ID:          bson.NewObjectId(),
-			DateCreated: time.Now(),
-			Status:      "PENDING",
-			ClientName:  result.Get("clientName").String(),
-			ClientEmail: result.Get("clientEmail").String(),
-			ClientPhone: result.Get("clientPhone").String(),
-			ClientDOB:   result.Get("clientDoB").String(),
-			BabyDOB:     result.Get("babyDoB").String(),
-			DemographicInfo: map[string]bool{
-				"under19":               result.Get("socioL19").Bool(),
-				"unemployed":            result.Get("socioUnemployed").Bool(),
-				"newToCanada":           result.Get("socioNewToCanada").Bool(),
-				"childWithSpecialNeeds": result.Get("socioSpecial").Bool(),
-				"homeless":              result.Get("socioHomeless").Bool(),
-			},
-			DemographicOther: result.Get("socioOther").String(),
-			ClientIncome:     result.Get("clientInc").Int(),
-			ReferrerName:     result.Get("referrerName").String(),
-			ReferrerEmail:    result.Get("referrerEmail").String(),
+		existingClients, _ := findClientByEmail(result.Get("clientEmail").String())
+		if len(existingClients) == 0 {
+			c := client{
+				ID:          bson.NewObjectId(),
+				DateCreated: time.Now(),
+				Status:      "PENDING",
+				ClientName:  result.Get("clientName").String(),
+				ClientEmail: result.Get("clientEmail").String(),
+				ClientPhone: result.Get("clientPhone").String(),
+				ClientDOB:   result.Get("clientDoB").String(),
+				BabyDOB:     result.Get("babyDoB").String(),
+				DemographicInfo: map[string]bool{
+					"under19":               result.Get("socioL19").Bool(),
+					"unemployed":            result.Get("socioUnemployed").Bool(),
+					"newToCanada":           result.Get("socioNewToCanada").Bool(),
+					"childWithSpecialNeeds": result.Get("socioSpecial").Bool(),
+					"homeless":              result.Get("socioHomeless").Bool(),
+				},
+				DemographicOther: result.Get("socioOther").String(),
+				ClientIncome:     result.Get("clientInc").Int(),
+				ReferrerName:     result.Get("referrerName").String(),
+				ReferrerEmail:    result.Get("referrerEmail").String(),
+			}
+			saveClient(c)
+			ctx.SetBodyString(serialize(c))
+			ctx.SetStatusCode(200)
+		} else {
+			ctx.SetStatusCode(400)
 		}
-		saveClient(c)
-		ctx.SetBodyString(c.ID.Hex())
 		next(nil)
 	})
 
-	// "/clients?id=XXXXXXXXXX"
+	// "/clients"
 	app.Get("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		id := string(ctx.QueryArgs().Peek("id"))
-		client := findClientById(id)
+		args := ctx.QueryArgs()
+		var clientInfo []client
+		var err error
+		if args.Has("id") {
+			var tempInfo client
+			tempInfo, err = findClientById(string(args.Peek("id")))
+			clientInfo = []client{tempInfo}
+		} else if args.Has("status") {
+			// approvedState = PENDING, APPROVED, DECLINED
+			clientInfo, err = findClientsByApprovedStatus(string(args.Peek("status")))
+		}
 		ctx.SetContentType("application/json")
-		ctx.SetBodyString(serialize(client))
+		if err != nil {
+			ctx.SetStatusCode(400)
+		} else {
+			ctx.SetBodyString(serialize(clientInfo))
+			ctx.SetStatusCode(200)
+		}
 		next(nil)
 	})
 
-	app.Use("/save-appointment", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		test1 := appointment{ID: bson.NewObjectId()}
-		saveAppointment(test1)
+	// "/appointments"
+	app.Put("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		next(nil)
 	})
 
-	// "/get-appointment?id=XXXXXXXXXX"
-	app.Use("/get-appointment", func(ctx *fasthttp.RequestCtx, next func(error)) {
+	// "/appointments"
+	app.Get("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
 		apt := findAppointmentById(id)
 		ctx.SetContentType("application/json")
@@ -112,23 +167,17 @@ func main() {
 		next(nil)
 	})
 
+	// "/search"
 	app.Get("/search", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		args := ctx.QueryArgs()
-		var client client
+		var clientInfo []client
 		if args.Has("name") {
-
+			clientInfo, _ = findClientsByPartialName(string(args.Peek("name")))
 		} else if args.Has("email") {
-			client, err := findClientByEmail(string(args.Peek("email")))
-			logger.WithFields(logrus.Fields{
-				"Error":  err.Error,
-				"Client": client,
-			}).Info("Request")
-		} else if args.Has("") {
-
+			clientInfo, _ = findClientByEmail(string(args.Peek("email")))
 		}
-
 		ctx.SetContentType("application/json")
-		ctx.SetBodyString(serialize(client))
+		ctx.SetBodyString(serialize(clientInfo))
 		ctx.SetStatusCode(200)
 		next(nil)
 	})
@@ -139,6 +188,7 @@ func main() {
 			"path":        cast.ToString(ctx.Path()),
 			"status_code": ctx.Response.StatusCode(),
 			"request_ip":  ctx.RemoteIP(),
+			"body":        cast.ToString(ctx.Request.Body()),
 		}).Info("Request")
 	})
 
