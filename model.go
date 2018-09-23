@@ -14,7 +14,7 @@ var clientsConnection = "clients"
 var appointmentsConnection = "appointments"
 
 func connect() {
-	session, err := mgo.Dial("mongodb://modernbaby:" + db_password + ".mlab.com:11963/modernbaby")
+	session, err := mgo.Dial("mongodb://modernbaby:" + db_password + "@ds111963.mlab.com:11963/modernbaby")
 	if err != nil {
 		log.Fatal(err)
 	}
