@@ -45,19 +45,19 @@ func findClientByEmail(email string) (client, error) {
 	return clientInfo, err
 }
 
-func findClientsByApprovedStatus(status string) (client, error) {
+func findClientsByApprovedStatus(status string) ([]client, error) {
 	connect()
-	var clientInfo client
-	err := db.C(clientsConnection).Find(bson.M{"status": status}).One(&clientInfo)
+	clientInfo := make([]client, 0)
+	err := db.C(clientsConnection).Find(bson.M{"status": status}).All(&clientInfo)
 	return clientInfo, err
 }
 
 func findClientsByPartialName(name string) ([]client, error) {
 	connect()
-	clientInfo := make([]client, 1)
+	clientInfo := make([]client, 0)
 	// Construct RegEx string
-	regexStr := `.*` + name + `.*`
-	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{regexStr, ""}}}).All(&clientInfo)
+	regexStr := /*`.*` +*/ name // + `.*`
+	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{regexStr, "i"}}}).All(&clientInfo)
 	return clientInfo, err
 }
 

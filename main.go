@@ -95,9 +95,10 @@ func main() {
 	// "/clients
 	app.Get("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		args := ctx.QueryArgs()
-		var clientInfo client
+		var clientInfo []client
 		if args.Has("id") {
-			clientInfo = findClientById(string(args.Peek("id")))
+			tempInfo := findClientById(string(args.Peek("id")))
+			clientInfo = []client{tempInfo}
 		} else if args.Has("status") {
 			// approvedState = PENDING, APPROVED, DECLINED
 			clientInfo, _ = findClientsByApprovedStatus(string(args.Peek("status")))
