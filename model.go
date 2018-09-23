@@ -73,11 +73,11 @@ func saveAppointment(apt appointment) {
 func findAppointmentsByClientId(id string) ([]appointment, error) {
 	connect()
 	appointmentInfo := make([]appointment, 0)
-	_, err := new(big.Int).SetString(id, 16)
+	/*_, err := new(big.Int).SetString(id, 16)
 	if !err {
 		return appointmentInfo, errors.New("Not a hex number")
-	}
-	db.C(appointmentsConnection).Find(bson.M{"clientid": bson.ObjectIdHex(id)}).All(&appointmentInfo)
+	}*/
+	db.C(appointmentsConnection).Find(bson.M{"clientid": id}).All(&appointmentInfo)
 	return appointmentInfo, nil
 }
 
