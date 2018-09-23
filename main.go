@@ -30,7 +30,7 @@ func main() {
 	// PUT "/clients?id=XXXXXX"
 	app.Put("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		id := string(ctx.QueryArgs().Peek("id"))
-		client := findClientById(id)
+		client, _ := findClientById(id)
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
 
 		status := result.Get("status")
@@ -104,7 +104,8 @@ func main() {
 		var clientInfo []client
 		var err error
 		if args.Has("id") {
-			tempInfo, err := findClientById(string(args.Peek("id")))
+			var tempInfo client
+			tempInfo, err = findClientById(string(args.Peek("id")))
 			clientInfo = []client{tempInfo}
 		} else if args.Has("status") {
 			// approvedState = PENDING, APPROVED, DECLINED

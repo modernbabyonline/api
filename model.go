@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
-	"strconv"
+	"math/big"
 	"time"
 
 	mgo "gopkg.in/mgo.v2"
@@ -35,10 +37,12 @@ func updateClient(client client) {
 func findClientById(id string) (client, error) {
 	connect()
 	var clientInfo client
-	_, err := strconv.ParseUInt(id, 16, 64)
+	hexNum := new(big.Int)
+	_, err := hexNum.SetString(id, 16)
+	fmt.Println(err)
 	//_, err := id.(bson.ObjectId)
-	if err != nil {
-		return client{}, err
+	if !err {
+		return client{}, errors.New("Not a hex number")
 	}
 	hex := bson.ObjectIdHex(id)
 	db.C(clientsConnection).FindId(hex).One(&clientInfo)
