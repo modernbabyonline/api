@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/apibillme/restserve"
@@ -25,28 +27,29 @@ func main() {
 
 		fmt.Printf("Inside the webhook method")
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
-
-		itemsRequested := result.Get("body.event.questions_and_answers.#.answer").Array()
+		fmt.Printf("TIME")
+		fmt.Printf(result.Get("time").String())
+		itemsRequested := result.Get("event.questions_and_answers.#.answer").Array()
 		items := []checklistItem{}
 		for _, item := range itemsRequested {
 			items = append(items, checklistItem{Item: item.String(), Status: 1})
 		}
 
-		timeStamp, err := time.Parse(time.RFC3339, result.Get("body.event.start_time_pretty").String())
+		timeStamp, err := time.Parse(time.RFC3339, result.Get("event.start_time_pretty").String())
 		if err != nil {
 			ctx.SetStatusCode(500)
 		}
 
-		email := result.Get("body.event.extendedAssignedTo.email").String()
+		email := result.Get("event.extended_assigned_to.0.email").String()
 		client, _ := findClientByEmail(email)
 
 		appt := appointment{
 			ID:        bson.NewObjectId(),
 			ClientID:  client.ID.Hex(),
-			Type:      result.Get("body.event.name").String(),
+			Type:      result.Get("event.name").String(),
 			Time:      timeStamp,
 			Items:     items,
-			Volunteer: result.Get("body.event.assignedTo").String(),
+			Volunteer: result.Get("event.assignedTo").String(),
 		}
 		saveAppointment(appt)
 		next(nil)
@@ -148,29 +151,49 @@ func main() {
 
 	// "/appointments"
 	app.Post("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+		body := cast.ToString(ctx.Request.Body())
+		removeEvent, _ := regexp.Compile(`\"event\"\:\"invitee\.created\"\,`)
+		validJSONBody := removeEvent.ReplaceAllString(body, "")
+		fmt.Printf(validJSONBody)
+		result := gjson.Parse(validJSONBody)
+		fmt.Println(gjson.Valid(validJSONBody))
 
-		itemsRequested := result.Get("body.event.questions_and_answers.#.answer").Array()
+		fmt.Printf(result.Get("time").String())
+		itemsRequested := result.Get("event.questions_and_answers.#.answer").Array()
 		items := []checklistItem{}
 		for _, item := range itemsRequested {
 			items = append(items, checklistItem{Item: item.String(), Status: 1})
 		}
+		fmt.Printf("made it past items")
 
-		timeStamp, err := time.Parse(time.RFC3339, result.Get("body.event.start_time_pretty").String())
+		timeStamp, err := time.Parse(time.RFC3339, result.Get("event.start_time_pretty").String())
 		if err != nil {
 			ctx.SetStatusCode(500)
 		}
 
-		email := result.Get("body.event.extendedAssignedTo.email").String()
-		client, _ := findClientByEmail(email)
+		fmt.Println(size)
+		byteArray := byte[](validJSONBody)
+		json.Unmarshal(byteArray, &unmarshaled)
+
+		clientEmail := gjson.Parse(validJSONBody).Get("invitee") //.Get("email")
+		fmt.Println("Here are SOME LOGS ********** ")
+		fmt.Println(clientEmail.Exists())
+		fmt.Println(clientEmail.String())
+		// clientEmails.ForEach(func(key, value gjson.Result) bool {
+		// 	fmt.Printf(value.String())
+		// 	fmt.Printf(value.Get("email").String())
+		// 	return true // keep iterating
+		// })
+
+		client, _ := findClientByEmail(clientEmail.String())
 
 		appt := appointment{
 			ID:        bson.NewObjectId(),
 			ClientID:  client.ID.Hex(),
-			Type:      result.Get("body.event.name").String(),
+			Type:      result.Get("event.name").String(),
 			Time:      timeStamp,
 			Items:     items,
-			Volunteer: result.Get("body.event.assignedTo").String(),
+			Volunteer: result.Get("event.assignedTo").String(),
 		}
 		saveAppointment(appt)
 		next(nil)

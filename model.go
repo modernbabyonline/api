@@ -51,31 +51,9 @@ func findClientById(id string) (client, error) {
 
 func findClientByEmail(email string) ([]client, error) {
 	connect()
-<<<<<<< HEAD
-	clientInfo := make([]client, 0)
-	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).All(&clientInfo)
-	return clientInfo, err
-}
-
-func findClientsByApprovedStatus(status string) ([]client, error) {
-	connect()
-	clientInfo := make([]client, 0)
-	err := db.C(clientsConnection).Find(bson.M{"status": status}).All(&clientInfo)
-	return clientInfo, err
-}
-
-func findClientsByPartialName(name string) ([]client, error) {
-	connect()
-	clientInfo := make([]client, 0)
-	// Construct RegEx string
-	regexStr := `.*` + name + `.*`
-	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{regexStr, "i"}}}).All(&clientInfo)
-	return clientInfo, err
-=======
 	var client client
 	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&client)
 	return client, err
->>>>>>> api endpoints
 }
 
 func saveAppointment(apt appointment) {
