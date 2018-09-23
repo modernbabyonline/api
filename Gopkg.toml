@@ -24,6 +24,9 @@
 #   go-tests = true
 #   unused-packages = true
 
+[metadata.heroku]
+  root-package = "github.com/modernbabyonline/api"
+
 [[constraint]]
   name = "github.com/apibillme/restserve"
   branch="cors"
@@ -43,6 +46,3 @@
 [prune]
   go-tests = true
   unused-packages = true
-
-[metadata.heroku]
-  root-package = "github.com/modernbabyonline/api"
