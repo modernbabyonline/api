@@ -81,6 +81,13 @@ func saveAppointment(apt appointment) {
 	db.C(appointmentsConnection).Insert(&apt)
 }
 
+func findAppointmentById(id string) appointment {
+	connect()
+	var apt appointment
+	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
+	return apt
+}
+
 func findAppointmentsByClientId(id string) ([]appointment, error) {
 	connect()
 	appointmentInfo := make([]appointment, 0)
@@ -94,7 +101,7 @@ func findAppointmentsByClientId(id string) ([]appointment, error) {
 
 type checklistItem struct {
 	Item   string // checklist items
-	Status int    // 0 = not requested, 1 = requested but not available, 2 = requested and available
+	Status string // 0 = not requested, 1 = requested but not available, 2 = requested and available
 }
 
 type appointment struct {
