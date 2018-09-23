@@ -74,12 +74,17 @@ func findAppointmentById(id string) appointment {
 	return apt
 }
 
+type checklistItem struct {
+	Item   string
+	Status int
+}
+
 type appointment struct {
 	ID        bson.ObjectId `bson:"_id"`
 	ClientID  string
 	Type      string
 	Time      time.Time
-	Items     []struct{}
+	Items     []checklistItem
 	Volunteer string
 }
 

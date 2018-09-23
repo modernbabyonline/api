@@ -92,7 +92,7 @@ func main() {
 		next(nil)
 	})
 
-	// "/clients?id=XXXXXXXXXX"
+	// "/clients
 	app.Get("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		args := ctx.QueryArgs()
 		var clientInfo client
@@ -107,15 +107,27 @@ func main() {
 		next(nil)
 	})
 
+	// "/appointments
 	app.Post("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
 		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+		itemsRequested := result.Get("body.event.questions_and_answers.#.answer").Array()
+		items := []checklistItem{}
+		for _, item := range itemsRequested {
+			items = append(items, checklistItem{Item: item.String(), Status: 1})
+		}
+
+		timeStamp, err := time.Parse(time.RFC3339, result.Get("body.event.start_time_pretty").String())
+		if err != nil {
+			ctx.SetStatusCode(500)
+		}
+
 		appt := appointment{
 			ID:        bson.NewObjectId(),
-			ClientID:  findClientById(appt.ID.Hex()).ID,
-			Type:      gjson.Get(result, "body.event.name").String(),
-			Time:      time.Parse(gjson.Get(result, "body.event.pretty_start_time")),
-			Items:     gjson.Get(result, "body.event.questions_and_answers.#.answer").Array(),
-			Volunteer: gjson.Get(result, "body.event.assigned_to").String(),
+			ClientID:  "",
+			Type:      result.Get("body.event.name").String(),
+			Time:      timeStamp,
+			Items:     items,
+			Volunteer: result.Get("body.event.assignedTo").String(),
 		}
 		saveAppointment(appt)
 		next(nil)
