@@ -182,8 +182,17 @@ func main() {
 
 	// "/appointments"
 	app.Get("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		id := string(ctx.QueryArgs().Peek("clientid"))
-		apt, err := findAppointmentsByClientId(id)
+		args := ctx.QueryArgs()
+		var apt []appointment
+		var err error
+		if args.Has("clientid") {
+			id := string(ctx.QueryArgs().Peek("clientid"))
+			apt, err = findAppointmentsByClientId(id)
+		} else if args.Has("id") {
+			id := string(ctx.QueryArgs().Peek("id"))
+			tempApt := findAppointmentById(id)
+			apt = []appointment{tempApt}
+		}
 		ctx.SetContentType("application/json")
 		if err != nil {
 			ctx.SetStatusCode(400)

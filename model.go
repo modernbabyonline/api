@@ -73,7 +73,7 @@ func saveAppointment(apt appointment) {
 func findAppointmentById(id string) appointment {
 	connect()
 	var apt appointment
-	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
+	db.C(appointmentsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
 	return apt
 }
 
