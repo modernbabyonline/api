@@ -162,11 +162,7 @@ func main() {
 
 	// "/appointments"
 	app.Put("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
-<<<<<<< HEAD
 		ctx.SetStatusCode(404)
-=======
-
->>>>>>> removed print statements in webhook endpoint
 		next(nil)
 	})
 
