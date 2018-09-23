@@ -26,6 +26,11 @@ func saveClient(client client) {
 	db.C(clientsConnection).Insert(&client)
 }
 
+func updateClient(client client) {
+	connect()
+	db.C(clientsConnection).Update(bson.M{"_id": client.ID}, client)
+}
+
 func findClientById(id string) client {
 	connect()
 	var client client
