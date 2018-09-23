@@ -155,15 +155,21 @@ func main() {
 
 	// "/appointments"
 	app.Put("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
+		ctx.SetStatusCode(404)
 		next(nil)
 	})
 
 	// "/appointments"
 	app.Get("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		id := string(ctx.QueryArgs().Peek("id"))
-		apt := findAppointmentById(id)
+		id := string(ctx.QueryArgs().Peek("clientid"))
+		apt, err := findAppointmentsByClientId(id)
 		ctx.SetContentType("application/json")
-		ctx.SetBodyString(serialize(apt))
+		if err != nil {
+			ctx.SetStatusCode(400)
+		} else {
+			ctx.SetBodyString(serialize(apt))
+			ctx.SetStatusCode(200)
+		}
 		next(nil)
 	})
 

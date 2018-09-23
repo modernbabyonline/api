@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"math/big"
 	"time"
@@ -37,15 +36,11 @@ func updateClient(client client) {
 func findClientById(id string) (client, error) {
 	connect()
 	var clientInfo client
-	hexNum := new(big.Int)
-	_, err := hexNum.SetString(id, 16)
-	fmt.Println(err)
-	//_, err := id.(bson.ObjectId)
+	_, err := new(big.Int).SetString(id, 16)
 	if !err {
 		return client{}, errors.New("Not a hex number")
 	}
-	hex := bson.ObjectIdHex(id)
-	db.C(clientsConnection).FindId(hex).One(&clientInfo)
+	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&clientInfo)
 	return clientInfo, nil
 }
 
@@ -66,7 +61,7 @@ func findClientsByPartialName(name string) ([]client, error) {
 	clientInfo := make([]client, 0)
 	// Construct RegEx string
 	regexStr := `.*` + name + `.*`
-	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{regexStr, "i"}}}).All(&clientInfo)
+	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{Pattern: regexStr, Options: "i"}}}).All(&clientInfo)
 	return clientInfo, err
 }
 
@@ -75,11 +70,15 @@ func saveAppointment(apt appointment) {
 	db.C(appointmentsConnection).Insert(&apt)
 }
 
-func findAppointmentById(id string) appointment {
+func findAppointmentsByClientId(id string) ([]appointment, error) {
 	connect()
-	var apt appointment
-	db.C(appointmentsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
-	return apt
+	appointmentInfo := make([]appointment, 0)
+	_, err := new(big.Int).SetString(id, 16)
+	if !err {
+		return appointmentInfo, errors.New("Not a hex number")
+	}
+	db.C(appointmentsConnection).Find(bson.M{"clientid": bson.ObjectIdHex(id)}).All(&appointmentInfo)
+	return appointmentInfo, nil
 }
 
 type checklistItem struct {
