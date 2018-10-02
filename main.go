@@ -76,7 +76,7 @@ func main() {
 		}
 
 		m := make(map[string]interface{})
-		err := json.NewDecoder(ctx.Request().Body).Decode(&m)
+		err = json.NewDecoder(ctx.Request().Body).Decode(&m)
 		if err != nil {
 			return ctx.JSON(400, err)
 		}
