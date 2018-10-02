@@ -24,25 +24,27 @@
 #   go-tests = true
 #   unused-packages = true
 
-[metadata.heroku]
-  root-package = "github.com/modernbabyonline/api"
 
 [[constraint]]
-  name = "github.com/labstack/echo"
-  version="v3.3.6"
-
-[[constraint]]
-  name = "github.com/tidwall/gjson"
   branch = "master"
-
-[[constraint]]
-  name = "github.com/apibillme/auth0"
-  version = "2.0.0"
-
-[[constraint]]
   name = "github.com/lestrrat-go/jwx"
+
+[[constraint]]
+  name = "github.com/spf13/cast"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/apibillme/cache"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/valyala/fasthttp"
   branch = "master"
-  
+
+[[constraint]]
+  name = "github.com/gbrlsnchs/jwt"
+  branch = "master"
+
 [prune]
   go-tests = true
   unused-packages = true

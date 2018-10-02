@@ -2,11 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
+	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/spf13/cast"
 
 	"github.com/apibillme/auth0"
@@ -16,13 +19,49 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+func getBaseURLPath(URL string) string {
+	// only get the base url component of the URL (e.g. /[users]/12 to users)
+	URL = strings.Trim(URL, "/")
+	urlPieces := strings.Split(URL, "/")
+	return urlPieces[0]
+}
+
+func validateRBAC(serverMethod string, serverBaseURL string, token *jwt.Token) error {
+	// extract scopes from access_token
+	scopes, err := auth0.GetURLScopes(token)
+	if err != nil {
+		return err
+	}
+	// set RBAC to fail as default
+	RBACMatch := false
+	// loop through each scope
+	for _, scope := range scopes {
+		// match scope method and url to requested method and url
+		if serverMethod == scope.Method && serverBaseURL == scope.URL {
+			RBACMatch = true
+		}
+	}
+	// raise error if RBAC fails
+	if !RBACMatch {
+		return errors.New("RBAC validation failed")
+	}
+	return nil
+}
+
 func auth0Middleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		jwkEndpoint := "https://modernbaby.auth0.com/.well-known/jwks.json"
 		audience := "https://api.modernbaby.online/"
 		issuer := "https://modernbaby.auth0.com/"
 		auth0.New(128, 3600)
-		_, errs := auth0.Validate(jwkEndpoint, audience, issuer, c.Request())
+		token, errs := auth0.Validate(jwkEndpoint, audience, issuer, c.Request())
+		if errs != nil {
+			m := echo.Map{}
+			m["error"] = errs.Error()
+			return c.JSON(401, m)
+		}
+		baseURL := getBaseURLPath(c.Path())
+		errs = validateRBAC(c.Request().Method, baseURL, token)
 		if errs != nil {
 			m := echo.Map{}
 			m["error"] = errs.Error()

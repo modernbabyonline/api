@@ -2,6 +2,30 @@
 
 
 [[projects]]
+  digest = "1:ae9a74b1716fc34d00ec492fc85e183f532ec323c7395e19797c6cde7d9051ca"
+  name = "github.com/apibillme/auth0"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ca7f075af3e1ce2c4c383d9eed2672549b7ee40a"
+  version = "2.0.0"
+
+[[projects]]
+  digest = "1:fc3d6bdccf26291cae209c7008d91e8b60898468c2286a9856b2c39f947d3df2"
+  name = "github.com/apibillme/cache"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0889fb28a73d7025b4932f6683302402dd2fd460"
+  version = "1.0.0"
+
+[[projects]]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  pruneopts = "UT"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
@@ -37,6 +61,26 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:cdbed6a7b574b13bbabcd8c36c5be56d6444789bab21fcd37d39655eab0b2141"
+  name = "github.com/klauspost/compress"
+  packages = [
+    "flate",
+    "gzip",
+    "zlib",
+  ]
+  pruneopts = "UT"
+  revision = "b939724e787a27c0005cabe3f78e7ed7987ac74f"
+  version = "v1.4.0"
+
+[[projects]]
+  digest = "1:4ea0668d490ca32a38366453a486e2e8c60fbdaf1f2607c96b4a093d8a5c8de7"
+  name = "github.com/klauspost/cpuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ae7887de9fa5d2db4eaa8174a7eff2c1ac00f2da"
+  version = "v1.1"
+
+[[projects]]
   digest = "1:9acadb9c8c15b8a9f635a7fa960c9a522b001a3919bc03df92ac26c372476aff"
   name = "github.com/labstack/echo"
   packages = [
@@ -59,6 +103,31 @@
   pruneopts = "UT"
   revision = "2a618302b929cc20862dda3aa6f02f64dbe740dd"
   version = "v0.2.7"
+
+[[projects]]
+  branch = "master"
+  digest = "1:fb8ff9097d6548a663806e6c3f14505acce94202836f66816ac385be31d2d3ff"
+  name = "github.com/lestrrat-go/jwx"
+  packages = [
+    "internal/base64",
+    "internal/option",
+    "jwa",
+    "jwk",
+    "jws",
+    "jws/sign",
+    "jws/verify",
+    "jwt",
+  ]
+  pruneopts = "UT"
+  revision = "0d477e6a1f0ec69634840308e3873fe71d928dd0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:992a4e430ab23874d31778dc2a17ba41e7733a9cfd151d1ee8476b46a828e7f5"
+  name = "github.com/lestrrat-go/pdebug"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "39f9a71bcabe9432cbdfe4d3d33f41988acd2ce6"
 
 [[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
@@ -177,6 +246,18 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:28d98cdbcbe4b4c2a22f8121d3bffbe06c42f2be7ce734c4cd042a4b3bd6e84d"
+  name = "github.com/valyala/fasthttp"
+  packages = [
+    ".",
+    "fasthttputil",
+    "stackless",
+  ]
+  pruneopts = "UT"
+  revision = "4087354082e1ab9a610705ec9f7949603d3c46ab"
+
+[[projects]]
+  branch = "master"
   digest = "1:268b8bce0064e8c057d7b913605459f9a26dcab864c0886a56d196540fbf003f"
   name = "github.com/valyala/fasttemplate"
   packages = ["."]
@@ -251,8 +332,10 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/apibillme/auth0",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
+    "github.com/lestrrat-go/jwx/jwt",
     "github.com/spf13/cast",
     "github.com/spf13/viper",
     "github.com/tidwall/gjson",
