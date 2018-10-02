@@ -1,36 +1,29 @@
 package main
 
 import (
-	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"time"
 
-	"github.com/apibillme/restserve"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cast"
-	"github.com/tidwall/buntdb"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"github.com/tidwall/gjson"
-	"github.com/valyala/fasthttp"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func main() {
-	app := restserve.New(restserve.CorsOptions{})
+	app := echo.New()
+	app.Use(middleware.Logger())
+	app.Use(middleware.Recover())
+	app.Use(middleware.CORS())
 
-	db, err := buntdb.Open(":memory:")
-	if err != nil {
-		log.Panic(err)
-	}
-	defer db.Close()
-
-	// setup logging
-	logger := logrus.New()
-	logger.SetFormatter(&logrus.JSONFormatter{})
-	logger.SetOutput(os.Stdout)
-
-	app.Post("/webhook", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		body := cast.ToString(ctx.Request.Body())
+	app.POST("/webhook", func(ctx echo.Context) error {
+		var body string
+		err := ctx.Bind(body)
+		if err != nil {
+			return err
+		}
 		removeEvent, _ := regexp.Compile(`\"event\"\:\"invitee\.created\"\,`)
 		validJSONBody := removeEvent.ReplaceAllString(body, "")
 		result := gjson.Parse(validJSONBody)
@@ -43,56 +36,37 @@ func main() {
 
 		timeStamp, err := time.Parse(time.RFC3339, result.Get("payload.event.start_time_pretty").String())
 		if err != nil {
-			ctx.SetStatusCode(500)
+			return ctx.JSON(500, `{"error": "`+err.Error()+`"}`)
 		}
 
 		clientEmail := gjson.Parse(validJSONBody).Get("payload.invitee.email").String()
 		clients, err := findClientByEmail(clientEmail)
 
 		if len(clients) == 0 {
-			ctx.SetStatusCode(400)
-			next(nil)
-		} else {
-			appt := appointment{
-				ID:        bson.NewObjectId(),
-				ClientID:  clients[0].ID.Hex(),
-				Type:      result.Get("payload.event_type.name").String(),
-				Time:      timeStamp,
-				Items:     items,
-				Volunteer: result.Get("payload.event.assignedTo.0").String(),
-				Status:    "SCHEDULED",
-			}
-			saveAppointment(appt)
-			next(nil)
+			return ctx.JSON(400, `{"error":"no clients"}`)
 		}
-
-		if err != nil {
-			ctx.SetStatusCode(404)
-			next(nil)
+		appt := appointment{
+			ID:        bson.NewObjectId(),
+			ClientID:  clients[0].ID.Hex(),
+			Type:      result.Get("payload.event_type.name").String(),
+			Time:      timeStamp,
+			Items:     items,
+			Volunteer: result.Get("payload.event.assignedTo.0").String(),
+			Status:    "SCHEDULED",
 		}
-		ctx.SetStatusCode(200)
-		next(nil)
+		saveAppointment(appt)
+		return ctx.JSON(200, "")
 	})
 
-	// // Validatation middleware
-	// app.Use("/", func(ctx *fasthttp.RequestCtx, next func(error)) {
-	// 	jwkEndpoint := "https://modernbabyonline.auth0.com/.well-known/jwks.json"
-	// 	audience := "https://api.modernbabyonline.online/"
-	// 	issuer := "https://modernbabyonline.auth0.com/"
-	// 	_, err := auth0.Validate(db, jwkEndpoint, audience, issuer, ctx)
-	// 	if err != nil {
-	// 		ctx.SetStatusCode(401)
-	// 		ctx.SetBodyString(`{"error":"` + cast.ToString(err) + `"}`)
-	// 	} else {
-	// 		next(nil)
-	// 	}
-	// })
-
-	// PUT "/clients"
-	app.Put("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		id := string(ctx.QueryArgs().Peek("id"))
-		client, _ := findClientById(id)
-		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+	app.PUT("/clients/:id", func(ctx echo.Context) error {
+		id := ctx.Param("id")
+		client, _ := findClientByID(id)
+		var body string
+		err := ctx.Bind(body)
+		if err != nil {
+			return err
+		}
+		result := gjson.Parse(body)
 
 		status := result.Get("status")
 		if status.Exists() {
@@ -121,12 +95,16 @@ func main() {
 		}
 		// TODO doesn't update demographic info or referrer info
 		updateClient(client)
-		ctx.SetBodyString(client.ID.Hex())
-		next(nil)
+		return ctx.JSON(http.StatusOK, client.ID.Hex())
 	})
 
-	app.Post("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+	app.POST("/clients", func(ctx echo.Context) error {
+		var body string
+		err := ctx.Bind(body)
+		if err != nil {
+			return err
+		}
+		result := gjson.Parse(body)
 		existingClients, _ := findClientByEmail(result.Get("clientEmail").String())
 		if len(existingClients) == 0 {
 			c := client{
@@ -151,42 +129,41 @@ func main() {
 				ReferrerEmail:    result.Get("referrerEmail").String(),
 			}
 			saveClient(c)
-			ctx.SetBodyString(serialize(c))
-			ctx.SetStatusCode(200)
-		} else {
-			ctx.SetStatusCode(400)
+			return ctx.JSON(http.StatusOK, serialize(c))
 		}
-		next(nil)
+		return ctx.JSON(400, "")
 	})
 
-	// "/clients"
-	app.Get("/clients", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		args := ctx.QueryArgs()
+	app.GET("/clients/:id", func(ctx echo.Context) error {
+		id := ctx.Param("id")
+		status := ctx.QueryParam("status")
 		var clientInfo []client
-		var err error
-		if args.Has("id") {
-			var tempInfo client
-			tempInfo, err = findClientById(string(args.Peek("id")))
+		if id != "" {
+			tempInfo, err := findClientByID(id)
+			if err != nil {
+				return err
+			}
 			clientInfo = []client{tempInfo}
-		} else if args.Has("status") {
+		} else if status != "" {
 			// approvedState = PENDING, APPROVED, DECLINED
-			clientInfo, err = findClientsByApprovedStatus(string(args.Peek("status")))
+			var err error
+			clientInfo, err = findClientsByApprovedStatus(status)
+			if err != nil {
+				return ctx.JSON(400, "")
+			}
 		}
-		ctx.SetContentType("application/json")
-		if err != nil {
-			ctx.SetStatusCode(400)
-		} else {
-			ctx.SetBodyString(serialize(clientInfo))
-			ctx.SetStatusCode(200)
-		}
-		next(nil)
+		return ctx.JSON(http.StatusOK, serialize(clientInfo))
 	})
 
-	// "/appointments"
-	app.Put("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		id := string(ctx.QueryArgs().Peek("id"))
-		apt := findAppointmentById(id)
-		result := gjson.Parse(cast.ToString(ctx.Request.Body()))
+	app.PUT("/appointments/:id", func(ctx echo.Context) error {
+		id := ctx.Param("id")
+		apt := findAppointmentByID(id)
+		var body string
+		err := ctx.Bind(body)
+		if err != nil {
+			return err
+		}
+		result := gjson.Parse(body)
 
 		if result.Get("Items").Exists() {
 			itemsRequested := result.Get("Items").Array()
@@ -198,57 +175,36 @@ func main() {
 			updateAppointment(apt)
 		}
 
-		ctx.SetContentType("application/json")
-		ctx.SetBodyString(serialize(apt))
-		next(nil)
+		return ctx.JSON(http.StatusOK, serialize(apt))
 	})
 
-	// "/appointments"
-	app.Get("/appointments", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		args := ctx.QueryArgs()
+	app.GET("/appointments/:id", func(ctx echo.Context) error {
+		clientID := ctx.QueryParam("clientid")
+		id := ctx.Param("id")
 		var apt []appointment
-		var err error
-		if args.Has("clientid") {
-			id := string(ctx.QueryArgs().Peek("clientid"))
-			apt, err = findAppointmentsByClientId(id)
-		} else if args.Has("id") {
-			id := string(ctx.QueryArgs().Peek("id"))
-			tempApt := findAppointmentById(id)
+		if clientID != "" {
+			var err error
+			apt, err = findAppointmentsByClientID(clientID)
+			if err != nil {
+				return err
+			}
+		} else if id != "" {
+			tempApt := findAppointmentByID(id)
 			apt = []appointment{tempApt}
 		}
-		ctx.SetContentType("application/json")
-		if err != nil {
-			ctx.SetStatusCode(400)
-		} else {
-			ctx.SetBodyString(serialize(apt))
-			ctx.SetStatusCode(200)
-		}
-		next(nil)
+		return ctx.JSON(http.StatusOK, serialize(apt))
 	})
 
-	// "/search"
-	app.Get("/search", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		args := ctx.QueryArgs()
+	app.GET("/search", func(ctx echo.Context) error {
+		name := ctx.QueryParam("name")
+		email := ctx.QueryParam("email")
 		var clientInfo []client
-		if args.Has("name") {
-			clientInfo, _ = findClientsByPartialName(string(args.Peek("name")))
-		} else if args.Has("email") {
-			clientInfo, _ = findClientByEmail(string(args.Peek("email")))
+		if name != "" {
+			clientInfo, _ = findClientsByPartialName(name)
+		} else if email != "" {
+			clientInfo, _ = findClientByEmail(email)
 		}
-		ctx.SetContentType("application/json")
-		ctx.SetBodyString(serialize(clientInfo))
-		ctx.SetStatusCode(200)
-		next(nil)
-	})
-
-	app.Use("/", func(ctx *fasthttp.RequestCtx, next func(error)) {
-		logger.WithFields(logrus.Fields{
-			"method":      cast.ToString(ctx.Method()),
-			"path":        cast.ToString(ctx.Path()),
-			"status_code": ctx.Response.StatusCode(),
-			"request_ip":  ctx.RemoteIP(),
-			"body":        cast.ToString(ctx.Request.Body()),
-		}).Info("Request")
+		return ctx.JSON(http.StatusOK, serialize(clientInfo))
 	})
 
 	port := os.Getenv("PORT")
@@ -259,5 +215,5 @@ func main() {
 		port = ":" + port
 	}
 
-	app.Listen(port)
+	app.Logger.Fatal(app.Start(port))
 }

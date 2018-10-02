@@ -44,7 +44,7 @@ func updateClient(client client) {
 	db.C(clientsConnection).Update(bson.M{"_id": client.ID}, client)
 }
 
-func findClientById(id string) (client, error) {
+func findClientByID(id string) (client, error) {
 	connect()
 	var clientInfo client
 	_, err := new(big.Int).SetString(id, 16)
@@ -86,14 +86,14 @@ func updateAppointment(apt appointment) {
 	db.C(appointmentsConnection).Update(bson.M{"_id": apt.ID}, apt)
 }
 
-func findAppointmentById(id string) appointment {
+func findAppointmentByID(id string) appointment {
 	connect()
 	var apt appointment
 	db.C(appointmentsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
 	return apt
 }
 
-func findAppointmentsByClientId(id string) ([]appointment, error) {
+func findAppointmentsByClientID(id string) ([]appointment, error) {
 	connect()
 	appointmentInfo := make([]appointment, 0)
 	/*_, err := new(big.Int).SetString(id, 16)

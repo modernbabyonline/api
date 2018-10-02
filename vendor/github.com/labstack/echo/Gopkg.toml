@@ -24,21 +24,27 @@
 #   go-tests = true
 #   unused-packages = true
 
-[metadata.heroku]
-  root-package = "github.com/modernbabyonline/api"
 
 [[constraint]]
-  name = "github.com/labstack/echo"
-  version="v3.3.6"
+  name = "github.com/dgrijalva/jwt-go"
+  version = "3.2.0"
 
 [[constraint]]
-  name = "github.com/valyala/fasthttp"
+  name = "github.com/labstack/gommon"
+  version = "0.2.7"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.2.2"
+
+[[constraint]]
   branch = "master"
+  name = "github.com/valyala/fasttemplate"
 
 [[constraint]]
-  name = "github.com/tidwall/gjson"
   branch = "master"
-  
+  name = "golang.org/x/crypto"
+
 [prune]
   go-tests = true
   unused-packages = true
