@@ -128,24 +128,22 @@ func main() {
 		return ctx.JSON(400, m)
 	})
 
+	app.GET("/clientsByStatus/:status", func(ctx echo.Context) error {
+		status := ctx.Param("status")
+		clientInfo, err := findClientsByApprovedStatus(status)
+		if err != nil {
+			return ctx.JSON(400, err)
+		}
+		return ctx.JSON(http.StatusOK, clientInfo)
+	})
+
 	app.GET("/clients/:id", func(ctx echo.Context) error {
 		id := ctx.Param("id")
-		status := ctx.QueryParam("status")
-		var clientInfo []client
-		if id != "" {
-			tempInfo, err := findClientByID(id)
-			if err != nil {
-				return err
-			}
-			clientInfo = []client{tempInfo}
-		} else if status != "" {
-			// approvedState = PENDING, APPROVED, DECLINED
-			var err error
-			clientInfo, err = findClientsByApprovedStatus(status)
-			if err != nil {
-				return ctx.JSON(400, err)
-			}
+		tempInfo, err := findClientByID(id)
+		if err != nil {
+			return ctx.JSON(400, err)
 		}
+		clientInfo := []client{tempInfo}
 		return ctx.JSON(http.StatusOK, clientInfo)
 	})
 
@@ -165,36 +163,34 @@ func main() {
 			apt.Items = items
 			updateAppointment(apt)
 		}
+		return ctx.JSON(http.StatusOK, apt)
+	})
 
+	app.GET("/appointmentsByClientID/:clientID", func(ctx echo.Context) error {
+		clientID := ctx.Param("clientID")
+		apt, err := findAppointmentsByClientID(clientID)
+		if err != nil {
+			return ctx.JSON(400, err)
+		}
 		return ctx.JSON(http.StatusOK, apt)
 	})
 
 	app.GET("/appointments/:id", func(ctx echo.Context) error {
-		clientID := ctx.QueryParam("clientid")
 		id := ctx.Param("id")
-		var apt []appointment
-		if clientID != "" {
-			var err error
-			apt, err = findAppointmentsByClientID(clientID)
-			if err != nil {
-				return err
-			}
-		} else if id != "" {
-			tempApt := findAppointmentByID(id)
-			apt = []appointment{tempApt}
-		}
+		tempApt := findAppointmentByID(id)
+		apt := []appointment{tempApt}
 		return ctx.JSON(http.StatusOK, apt)
 	})
 
-	app.GET("/search", func(ctx echo.Context) error {
-		name := ctx.QueryParam("name")
-		email := ctx.QueryParam("email")
-		var clientInfo []client
-		if name != "" {
-			clientInfo, _ = findClientsByPartialName(name)
-		} else if email != "" {
-			clientInfo, _ = findClientByEmail(email)
-		}
+	app.GET("/searchByEmail/:email", func(ctx echo.Context) error {
+		email := ctx.Param("email")
+		clientInfo, _ := findClientByEmail(email)
+		return ctx.JSON(http.StatusOK, clientInfo)
+	})
+
+	app.GET("/searchByName/:name", func(ctx echo.Context) error {
+		name := ctx.Param("name")
+		clientInfo, _ := findClientsByPartialName(name)
 		return ctx.JSON(http.StatusOK, clientInfo)
 	})
 
