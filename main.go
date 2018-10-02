@@ -37,7 +37,7 @@ func validateRBAC(serverMethod string, serverBaseURL string, token *jwt.Token) e
 	// loop through each scope
 	for _, scope := range scopes {
 		// match scope method and url to requested method and url
-		if serverMethod == scope.Method && serverBaseURL == scope.URL {
+		if strings.ToLower(serverMethod) == strings.ToLower(scope.Method) && strings.ToLower(serverBaseURL) == strings.ToLower(scope.URL) {
 			RBACMatch = true
 		}
 	}
@@ -217,7 +217,7 @@ func main() {
 		return ctx.JSON(400, e)
 	}, auth0Middleware)
 
-	app.GET("/clientsByStatus/:status", func(ctx echo.Context) error {
+	app.GET("/clients_by_status/:status", func(ctx echo.Context) error {
 		status := ctx.Param("status")
 		clientInfo, err := findClientsByApprovedStatus(status)
 		if err != nil {
@@ -259,7 +259,7 @@ func main() {
 		return ctx.JSON(http.StatusOK, apt)
 	}, auth0Middleware)
 
-	app.GET("/appointmentsByClientID/:clientID", func(ctx echo.Context) error {
+	app.GET("/appointments_by_clientid/:clientID", func(ctx echo.Context) error {
 		clientID := ctx.Param("clientID")
 		apt, err := findAppointmentsByClientID(clientID)
 		if err != nil {

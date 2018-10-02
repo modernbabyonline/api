@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  digest = "1:ae9a74b1716fc34d00ec492fc85e183f532ec323c7395e19797c6cde7d9051ca"
+  digest = "1:9a35637484a67a782f55b97299fe8bb219ac1e1ef9777bfdcc805ce327db097b"
   name = "github.com/apibillme/auth0"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ca7f075af3e1ce2c4c383d9eed2672549b7ee40a"
-  version = "2.0.0"
+  revision = "af5ec301edce1901916272894063596d66b5f591"
+  version = "2.0.1"
 
 [[projects]]
   digest = "1:fc3d6bdccf26291cae209c7008d91e8b60898468c2286a9856b2c39f947d3df2"
