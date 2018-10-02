@@ -15,7 +15,6 @@ import (
 func main() {
 	app := echo.New()
 	app.Use(middleware.Logger())
-	app.Use(middleware.Recover())
 	app.Use(middleware.CORS())
 
 	app.POST("/webhook", func(ctx echo.Context) error {
