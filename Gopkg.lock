@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  branch = "cors"
-  digest = "1:bde212e8110fee26d99ab85e6748f27a975203b134a36ddc3ab746b02220e57d"
-  name = "github.com/apibillme/restserve"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "4a5ffc917c5792e38bae3852d6423f7467bf2632"
-
-[[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
@@ -43,26 +35,6 @@
   pruneopts = "UT"
   revision = "8cb6e5b959231cc1119e43259c4a608f9c51a241"
   version = "v1.0.0"
-
-[[projects]]
-  digest = "1:cdbed6a7b574b13bbabcd8c36c5be56d6444789bab21fcd37d39655eab0b2141"
-  name = "github.com/klauspost/compress"
-  packages = [
-    "flate",
-    "gzip",
-    "zlib",
-  ]
-  pruneopts = "UT"
-  revision = "b939724e787a27c0005cabe3f78e7ed7987ac74f"
-  version = "v1.4.0"
-
-[[projects]]
-  digest = "1:4ea0668d490ca32a38366453a486e2e8c60fbdaf1f2607c96b4a093d8a5c8de7"
-  name = "github.com/klauspost/cpuid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ae7887de9fa5d2db4eaa8174a7eff2c1ac00f2da"
-  version = "v1.1"
 
 [[projects]]
   digest = "1:9acadb9c8c15b8a9f635a7fa960c9a522b001a3919bc03df92ac26c372476aff"
@@ -205,18 +177,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9aadc4ceaf99c20970db34777086d60315f22f315905ae21f885c584de833de7"
-  name = "github.com/valyala/fasthttp"
-  packages = [
-    ".",
-    "fasthttputil",
-    "stackless",
-  ]
-  pruneopts = "UT"
-  revision = "1ba43613e8dfb7ee0b7f974df9157dfb6f21c625"
-
-[[projects]]
-  branch = "master"
   digest = "1:268b8bce0064e8c057d7b913605459f9a26dcab864c0886a56d196540fbf003f"
   name = "github.com/valyala/fasttemplate"
   packages = ["."]
@@ -291,13 +251,11 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/apibillme/restserve",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
     "github.com/spf13/cast",
     "github.com/spf13/viper",
     "github.com/tidwall/gjson",
-    "github.com/valyala/fasthttp",
     "gopkg.in/mailgun/mailgun-go.v1",
     "gopkg.in/mgo.v2",
     "gopkg.in/mgo.v2/bson",

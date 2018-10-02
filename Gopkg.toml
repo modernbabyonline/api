@@ -32,12 +32,12 @@
   version="v3.3.6"
 
 [[constraint]]
-  name = "github.com/valyala/fasthttp"
+  name = "github.com/tidwall/gjson"
   branch = "master"
 
 [[constraint]]
-  name = "github.com/tidwall/gjson"
-  branch = "master"
+  name = "github.com/apibillme/auth0"
+  version = "2.0.0"
   
 [prune]
   go-tests = true

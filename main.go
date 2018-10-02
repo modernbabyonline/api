@@ -9,11 +9,29 @@ import (
 
 	"github.com/spf13/cast"
 
+	"github.com/apibillme/auth0"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/tidwall/gjson"
 	"gopkg.in/mgo.v2/bson"
 )
+
+func auth0Middleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
+		jwkEndpoint := "https://modernbaby.auth0.com/.well-known/jwks.json"
+		audience := "https://api.modernbaby.online/"
+		issuer := "https://modernbaby.auth0.com/"
+		auth0.New(128, 3600)
+		_, errs := auth0.Validate(jwkEndpoint, audience, issuer, c.Request())
+		if errs != nil {
+			c.Error(errs)
+		}
+		return nil
+	}
+}
 
 func main() {
 	app := echo.New()
@@ -121,7 +139,7 @@ func main() {
 		// TODO doesn't update demographic info or referrer info
 		updateClient(client)
 		return ctx.JSON(http.StatusOK, client.ID.Hex())
-	})
+	}, auth0Middleware)
 
 	app.POST("/clients", func(ctx echo.Context) error {
 		m := make(map[string]interface{})
@@ -159,7 +177,7 @@ func main() {
 		e := echo.Map{}
 		e["error"] = "client already exists"
 		return ctx.JSON(400, e)
-	})
+	}, auth0Middleware)
 
 	app.GET("/clientsByStatus/:status", func(ctx echo.Context) error {
 		status := ctx.Param("status")
@@ -168,7 +186,7 @@ func main() {
 			return ctx.JSON(400, err)
 		}
 		return ctx.JSON(http.StatusOK, clientInfo)
-	})
+	}, auth0Middleware)
 
 	app.GET("/clients/:id", func(ctx echo.Context) error {
 		id := ctx.Param("id")
@@ -178,7 +196,7 @@ func main() {
 		}
 		clientInfo := []client{tempInfo}
 		return ctx.JSON(http.StatusOK, clientInfo)
-	})
+	}, auth0Middleware)
 
 	app.PUT("/appointments/:id", func(ctx echo.Context) error {
 		m := make(map[string]interface{})
@@ -201,7 +219,7 @@ func main() {
 			updateAppointment(apt)
 		}
 		return ctx.JSON(http.StatusOK, apt)
-	})
+	}, auth0Middleware)
 
 	app.GET("/appointmentsByClientID/:clientID", func(ctx echo.Context) error {
 		clientID := ctx.Param("clientID")
@@ -210,14 +228,14 @@ func main() {
 			return ctx.JSON(400, err)
 		}
 		return ctx.JSON(http.StatusOK, apt)
-	})
+	}, auth0Middleware)
 
 	app.GET("/appointments/:id", func(ctx echo.Context) error {
 		id := ctx.Param("id")
 		tempApt := findAppointmentByID(id)
 		apt := []appointment{tempApt}
 		return ctx.JSON(http.StatusOK, apt)
-	})
+	}, auth0Middleware)
 
 	app.GET("/search", func(ctx echo.Context) error {
 		name := ctx.QueryParam("name")
@@ -237,7 +255,7 @@ func main() {
 			}
 		}
 		return ctx.JSON(http.StatusOK, clientInfo)
-	})
+	}, auth0Middleware)
 
 	port := os.Getenv("PORT")
 
