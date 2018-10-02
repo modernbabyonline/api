@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -100,6 +101,7 @@ func main() {
 	app.POST("/clients", func(ctx echo.Context) error {
 		var body string
 		err := ctx.Bind(body)
+		log.Println(err)
 		if err != nil {
 			return err
 		}
