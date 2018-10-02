@@ -75,8 +75,8 @@ func main() {
 			return ctx.JSON(400, err)
 		}
 
-		m := echo.Map{}
-		err = ctx.Bind(&m)
+		m := make(map[string]interface{})
+		err := json.NewDecoder(ctx.Request().Body).Decode(&m)
 		if err != nil {
 			return ctx.JSON(400, err)
 		}
