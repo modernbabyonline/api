@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"regexp"
 	"time"
+
+	"github.com/spf13/cast"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -18,8 +21,17 @@ func main() {
 	app.Use(middleware.CORS())
 
 	app.POST("/webhook", func(ctx echo.Context) error {
-		var body string
-		_ = ctx.Bind(&body) // don't handle error as it gets object
+		m := echo.Map{}
+		err := ctx.Bind(&m)
+		if err != nil {
+			return ctx.JSON(400, err)
+		}
+		jsonString, err := json.Marshal(m)
+		if err != nil {
+			return ctx.JSON(500, err)
+		}
+		body := string(jsonString)
+
 		removeEvent, _ := regexp.Compile(`\"event\"\:\"invitee\.created\"\,`)
 		validJSONBody := removeEvent.ReplaceAllString(body, "")
 		result := gjson.Parse(validJSONBody)
@@ -58,35 +70,53 @@ func main() {
 
 	app.PUT("/clients/:id", func(ctx echo.Context) error {
 		id := ctx.Param("id")
-		client, _ := findClientByID(id)
-		var body string
-		_ = ctx.Bind(&body) // don't handle error as it gets object
-		result := gjson.Parse(body)
+		client, err := findClientByID(id)
+		if err != nil {
+			return ctx.JSON(400, err)
+		}
 
-		status := result.Get("status")
-		if status.Exists() {
-			if client.Status == "PENDING" && status.String() == "APPROVED" {
+		m := echo.Map{}
+		err = ctx.Bind(&m)
+		if err != nil {
+			return ctx.JSON(400, err)
+		}
+
+		status := cast.ToString(m["status"])
+		if status != "" {
+			if client.Status == "PENDING" && status == "APPROVED" {
 				sendMakeApptEmail(client.ClientEmail)
 			}
-			client.Status = status.String()
+			client.Status = status
 		}
-		if result.Get("clientName").Exists() {
-			client.ClientName = result.Get("clientName").String()
+
+		clientName := cast.ToString(m["clientName"])
+		if clientName != "" {
+			client.ClientName = clientName
 		}
-		if result.Get("clientEmail").Exists() {
-			client.ClientEmail = result.Get("clientEmail").String()
+
+		clientEmail := cast.ToString(m["clientEmail"])
+		if clientEmail != "" {
+			client.ClientEmail = clientEmail
 		}
-		if result.Get("clientPhone").Exists() {
-			client.ClientPhone = result.Get("clientPhone").String()
+
+		clientPhone := cast.ToString(m["clientPhone"])
+		if clientPhone != "" {
+			client.ClientPhone = clientPhone
 		}
-		if result.Get("clientDoB").Exists() {
-			client.ClientDOB = result.Get("clientDoB").String()
+
+		clientDOB := cast.ToString(m["clientDOB"])
+		if clientDOB != "" {
+			client.ClientDOB = clientDOB
 		}
-		if result.Get("babyDoB").Exists() {
-			client.BabyDOB = result.Get("babyDoB").String()
+
+		babyDOB := cast.ToString(m["babyDoB"]) // TODO: why the wierd caps?
+		if babyDOB != "" {
+			client.BabyDOB = babyDOB
 		}
-		if result.Get("clientInc").Exists() {
-			client.ClientIncome = result.Get("clientInc").Int()
+
+		clientInc := cast.ToInt64(m["clientInc"])
+		if clientInc != 0 {
+			client.ClientIncome = clientInc
 		}
 		// TODO doesn't update demographic info or referrer info
 		updateClient(client)
@@ -94,38 +124,40 @@ func main() {
 	})
 
 	app.POST("/clients", func(ctx echo.Context) error {
-		var body string
-		_ = ctx.Bind(&body) // don't handle error as it gets object
-		result := gjson.Parse(body)
-		existingClients, _ := findClientByEmail(result.Get("clientEmail").String())
+		m := echo.Map{}
+		err := ctx.Bind(&m)
+		if err != nil {
+			return ctx.JSON(400, err)
+		}
+		existingClients, _ := findClientByEmail(cast.ToString(m["clientEmail"]))
 		if len(existingClients) == 0 {
 			c := client{
 				ID:          bson.NewObjectId(),
 				DateCreated: time.Now(),
 				Status:      "PENDING",
-				ClientName:  result.Get("clientName").String(),
-				ClientEmail: result.Get("clientEmail").String(),
-				ClientPhone: result.Get("clientPhone").String(),
-				ClientDOB:   result.Get("clientDoB").String(),
-				BabyDOB:     result.Get("babyDoB").String(),
+				ClientName:  cast.ToString(m["clientName"]),
+				ClientEmail: cast.ToString(m["clientEmail"]),
+				ClientPhone: cast.ToString(m["clientPhone"]),
+				ClientDOB:   cast.ToString(m["clientDoB"]),
+				BabyDOB:     cast.ToString(m["babyDoB"]),
 				DemographicInfo: map[string]bool{
-					"under19":               result.Get("socioL19").Bool(),
-					"unemployed":            result.Get("socioUnemployed").Bool(),
-					"newToCanada":           result.Get("socioNewToCanada").Bool(),
-					"childWithSpecialNeeds": result.Get("socioSpecial").Bool(),
-					"homeless":              result.Get("socioHomeless").Bool(),
+					"under19":               cast.ToBool(m["socioL19"]),
+					"unemployed":            cast.ToBool(m["socioUnemployed"]),
+					"newToCanada":           cast.ToBool(m["socioNewToCanada"]),
+					"childWithSpecialNeeds": cast.ToBool(m["socioSpecial"]),
+					"homeless":              cast.ToBool(m["socioHomeless"]),
 				},
-				DemographicOther: result.Get("socioOther").String(),
-				ClientIncome:     result.Get("clientInc").Int(),
-				ReferrerName:     result.Get("referrerName").String(),
-				ReferrerEmail:    result.Get("referrerEmail").String(),
+				DemographicOther: cast.ToString(m["socioOther"]),
+				ClientIncome:     cast.ToInt64(m["clientInc"]),
+				ReferrerName:     cast.ToString(m["referrerName"]),
+				ReferrerEmail:    cast.ToString(m["referrerEmail"]),
 			}
 			saveClient(c)
 			return ctx.JSON(http.StatusOK, c)
 		}
-		m := echo.Map{}
-		m["error"] = "client already exists"
-		return ctx.JSON(400, m)
+		e := echo.Map{}
+		e["error"] = "client already exists"
+		return ctx.JSON(400, e)
 	})
 
 	app.GET("/clientsByStatus/:status", func(ctx echo.Context) error {
@@ -148,17 +180,21 @@ func main() {
 	})
 
 	app.PUT("/appointments/:id", func(ctx echo.Context) error {
+		m := echo.Map{}
+		err := ctx.Bind(&m)
+		if err != nil {
+			return ctx.JSON(400, err)
+		}
+
 		id := ctx.Param("id")
 		apt := findAppointmentByID(id)
-		var body string
-		_ = ctx.Bind(&body) // don't handle error as it gets object
-		result := gjson.Parse(body)
 
-		if result.Get("Items").Exists() {
-			itemsRequested := result.Get("Items").Array()
+		itemsRequested := cast.ToSlice(m["Items"])
+		if len(itemsRequested) > 0 {
 			items := []checklistItem{}
 			for _, item := range itemsRequested {
-				items = append(items, checklistItem{Item: item.Get("Item").String(), Status: item.Get("Status").String()})
+				i := cast.ToStringMapString(item)
+				items = append(items, checklistItem{Item: i["Item"], Status: i["Status"]})
 			}
 			apt.Items = items
 			updateAppointment(apt)
@@ -187,9 +223,17 @@ func main() {
 		email := ctx.QueryParam("email")
 		var clientInfo []client
 		if name != "" {
-			clientInfo, _ = findClientsByPartialName(name)
+			var err error
+			clientInfo, err = findClientsByPartialName(name)
+			if err != nil {
+				return ctx.JSON(400, err)
+			}
 		} else if email != "" {
-			clientInfo, _ = findClientByEmail(email)
+			var err error
+			clientInfo, err = findClientByEmail(email)
+			if err != nil {
+				return ctx.JSON(400, err)
+			}
 		}
 		return ctx.JSON(http.StatusOK, clientInfo)
 	})
