@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -20,10 +19,7 @@ func main() {
 
 	app.POST("/webhook", func(ctx echo.Context) error {
 		var body string
-		err := ctx.Bind(body)
-		if err != nil {
-			return err
-		}
+		_ = ctx.Bind(&body) // don't handle error as it gets object
 		removeEvent, _ := regexp.Compile(`\"event\"\:\"invitee\.created\"\,`)
 		validJSONBody := removeEvent.ReplaceAllString(body, "")
 		result := gjson.Parse(validJSONBody)
@@ -36,14 +32,16 @@ func main() {
 
 		timeStamp, err := time.Parse(time.RFC3339, result.Get("payload.event.start_time_pretty").String())
 		if err != nil {
-			return ctx.JSON(500, `{"error": "`+err.Error()+`"}`)
+			return ctx.JSON(500, err)
 		}
 
 		clientEmail := gjson.Parse(validJSONBody).Get("payload.invitee.email").String()
 		clients, err := findClientByEmail(clientEmail)
 
 		if len(clients) == 0 {
-			return ctx.JSON(400, `{"error":"no clients"}`)
+			m := echo.Map{}
+			m["error"] = "no clients"
+			return ctx.JSON(400, m)
 		}
 		appt := appointment{
 			ID:        bson.NewObjectId(),
@@ -62,10 +60,7 @@ func main() {
 		id := ctx.Param("id")
 		client, _ := findClientByID(id)
 		var body string
-		err := ctx.Bind(body)
-		if err != nil {
-			return err
-		}
+		_ = ctx.Bind(&body) // don't handle error as it gets object
 		result := gjson.Parse(body)
 
 		status := result.Get("status")
@@ -100,11 +95,7 @@ func main() {
 
 	app.POST("/clients", func(ctx echo.Context) error {
 		var body string
-		err := ctx.Bind(body)
-		log.Println(err)
-		if err != nil {
-			return err
-		}
+		_ = ctx.Bind(&body) // don't handle error as it gets object
 		result := gjson.Parse(body)
 		existingClients, _ := findClientByEmail(result.Get("clientEmail").String())
 		if len(existingClients) == 0 {
@@ -130,9 +121,11 @@ func main() {
 				ReferrerEmail:    result.Get("referrerEmail").String(),
 			}
 			saveClient(c)
-			return ctx.JSON(http.StatusOK, serialize(c))
+			return ctx.JSON(http.StatusOK, c)
 		}
-		return ctx.JSON(400, "")
+		m := echo.Map{}
+		m["error"] = "client already exists"
+		return ctx.JSON(400, m)
 	})
 
 	app.GET("/clients/:id", func(ctx echo.Context) error {
@@ -150,20 +143,17 @@ func main() {
 			var err error
 			clientInfo, err = findClientsByApprovedStatus(status)
 			if err != nil {
-				return ctx.JSON(400, "")
+				return ctx.JSON(400, err)
 			}
 		}
-		return ctx.JSON(http.StatusOK, serialize(clientInfo))
+		return ctx.JSON(http.StatusOK, clientInfo)
 	})
 
 	app.PUT("/appointments/:id", func(ctx echo.Context) error {
 		id := ctx.Param("id")
 		apt := findAppointmentByID(id)
 		var body string
-		err := ctx.Bind(body)
-		if err != nil {
-			return err
-		}
+		_ = ctx.Bind(&body) // don't handle error as it gets object
 		result := gjson.Parse(body)
 
 		if result.Get("Items").Exists() {
@@ -176,7 +166,7 @@ func main() {
 			updateAppointment(apt)
 		}
 
-		return ctx.JSON(http.StatusOK, serialize(apt))
+		return ctx.JSON(http.StatusOK, apt)
 	})
 
 	app.GET("/appointments/:id", func(ctx echo.Context) error {
@@ -193,7 +183,7 @@ func main() {
 			tempApt := findAppointmentByID(id)
 			apt = []appointment{tempApt}
 		}
-		return ctx.JSON(http.StatusOK, serialize(apt))
+		return ctx.JSON(http.StatusOK, apt)
 	})
 
 	app.GET("/search", func(ctx echo.Context) error {
@@ -205,7 +195,7 @@ func main() {
 		} else if email != "" {
 			clientInfo, _ = findClientByEmail(email)
 		}
-		return ctx.JSON(http.StatusOK, serialize(clientInfo))
+		return ctx.JSON(http.StatusOK, clientInfo)
 	})
 
 	port := os.Getenv("PORT")
