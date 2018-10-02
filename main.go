@@ -182,15 +182,15 @@ func main() {
 		return ctx.JSON(http.StatusOK, apt)
 	})
 
-	app.GET("/searchByEmail/:email", func(ctx echo.Context) error {
-		email := ctx.Param("email")
-		clientInfo, _ := findClientByEmail(email)
-		return ctx.JSON(http.StatusOK, clientInfo)
-	})
-
-	app.GET("/searchByName/:name", func(ctx echo.Context) error {
-		name := ctx.Param("name")
-		clientInfo, _ := findClientsByPartialName(name)
+	app.GET("/search", func(ctx echo.Context) error {
+		name := ctx.QueryParam("name")
+		email := ctx.QueryParam("email")
+		var clientInfo []client
+		if name != "" {
+			clientInfo, _ = findClientsByPartialName(name)
+		} else if email != "" {
+			clientInfo, _ = findClientByEmail(email)
+		}
 		return ctx.JSON(http.StatusOK, clientInfo)
 	})
 
