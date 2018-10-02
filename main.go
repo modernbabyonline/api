@@ -18,18 +18,17 @@ import (
 
 func auth0Middleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if err := next(c); err != nil {
-			c.Error(err)
-		}
 		jwkEndpoint := "https://modernbaby.auth0.com/.well-known/jwks.json"
 		audience := "https://api.modernbaby.online/"
 		issuer := "https://modernbaby.auth0.com/"
 		auth0.New(128, 3600)
 		_, errs := auth0.Validate(jwkEndpoint, audience, issuer, c.Request())
 		if errs != nil {
-			c.Error(errs)
+			m := echo.Map{}
+			m["error"] = errs.Error()
+			return c.JSON(401, m)
 		}
-		return nil
+		return next(c)
 	}
 }
 
