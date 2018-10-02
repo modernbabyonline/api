@@ -21,16 +21,16 @@ func main() {
 	app.Use(middleware.CORS())
 
 	app.POST("/webhook", func(ctx echo.Context) error {
-		m := echo.Map{}
-		err := ctx.Bind(&m)
+		m := make(map[string]interface{})
+		err := json.NewDecoder(ctx.Request().Body).Decode(&m)
 		if err != nil {
 			return ctx.JSON(400, err)
 		}
-		jsonString, err := json.Marshal(m)
+		jsonBytes, err := json.Marshal(m)
 		if err != nil {
 			return ctx.JSON(500, err)
 		}
-		body := string(jsonString)
+		body := string(jsonBytes)
 
 		removeEvent, _ := regexp.Compile(`\"event\"\:\"invitee\.created\"\,`)
 		validJSONBody := removeEvent.ReplaceAllString(body, "")
@@ -124,11 +124,12 @@ func main() {
 	})
 
 	app.POST("/clients", func(ctx echo.Context) error {
-		m := echo.Map{}
-		err := ctx.Bind(&m)
+		m := make(map[string]interface{})
+		err := json.NewDecoder(ctx.Request().Body).Decode(&m)
 		if err != nil {
 			return ctx.JSON(400, err)
 		}
+
 		existingClients, _ := findClientByEmail(cast.ToString(m["clientEmail"]))
 		if len(existingClients) == 0 {
 			c := client{
@@ -180,8 +181,8 @@ func main() {
 	})
 
 	app.PUT("/appointments/:id", func(ctx echo.Context) error {
-		m := echo.Map{}
-		err := ctx.Bind(&m)
+		m := make(map[string]interface{})
+		err := json.NewDecoder(ctx.Request().Body).Decode(&m)
 		if err != nil {
 			return ctx.JSON(400, err)
 		}
