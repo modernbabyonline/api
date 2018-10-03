@@ -11,7 +11,7 @@ import (
 
 func sendMakeApptEmail(recipient string) {
 	viper.AutomaticEnv()
-	mailgunPrivateKey := cast.ToString(viper.Get("mailgun_private_key"))
+	mailgunPrivateKey := cast.ToString(viper.Get("mailgun_api_key"))
 	mailgunPublicKey := cast.ToString(viper.Get("mailgun_public_key"))
 	mg := mailgun.NewMailgun("mail.modernbaby.online", mailgunPrivateKey, mailgunPublicKey)
 	sender := "BabyGoRound <mailgun@mail.modernbaby.online>"
