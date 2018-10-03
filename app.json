@@ -1,0 +1,59 @@
+{
+  "name": "api",
+  "scripts": {
+  },
+  "env": {
+    "AUDIENCE": {
+      "required": true
+    },
+    "DATABASE": {
+      "required": true
+    },
+    "ISSUER": {
+      "required": true
+    },
+    "JWK_ENDPOINT": {
+      "required": true
+    },
+    "MAILGUN_PRIVATE_KEY": {
+      "required": true
+    },
+    "MAILGUN_PUBLIC_KEY": {
+      "required": true
+    },
+    "MONGODB_URI": {
+      "required": true
+    },
+    "NEW_RELIC_LICENSE_KEY": {
+      "required": true
+    },
+    "NEW_RELIC_LOG": {
+      "required": true
+    },
+    "PAPERTRAIL_API_TOKEN": {
+      "required": true
+    },
+    "ROLLBAR_ACCESS_TOKEN": {
+      "required": true
+    },
+    "ROLLBAR_ENDPOINT": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "mongolab",
+    "newrelic",
+    "papertrail",
+    "rollbar"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/go"
+    }
+  ]
+}
