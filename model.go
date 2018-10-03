@@ -27,7 +27,7 @@ func connect() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	session, err := mgo.Dial("mongodb://modernbaby:" + cast.ToString(viper.Get("db_password")) + "@ds111963.mlab.com:11963/modernbaby")
+	session, err := mgo.Dial(cast.ToString(viper.Get("mongodb_uri")))
 	if err != nil {
 		log.Fatal(err)
 	}
