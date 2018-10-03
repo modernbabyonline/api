@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"math/big"
 	"time"
@@ -21,12 +20,6 @@ var appointmentsConnection = "appointments"
 
 func connect() {
 	viper.AutomaticEnv()
-	viper.SetConfigName("account")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		fmt.Println(err)
-	}
 	session, err := mgo.Dial(cast.ToString(viper.Get("mongodb_uri")))
 	if err != nil {
 		log.Fatal(err)

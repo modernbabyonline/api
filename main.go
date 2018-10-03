@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/spf13/cast"
 
@@ -50,9 +52,10 @@ func validateRBAC(serverMethod string, serverBaseURL string, token *jwt.Token) e
 
 func auth0Middleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		jwkEndpoint := "https://modernbaby.auth0.com/.well-known/jwks.json"
-		audience := "https://api.modernbaby.online/"
-		issuer := "https://modernbaby.auth0.com/"
+		viper.AutomaticEnv()
+		jwkEndpoint := cast.ToString(viper.Get("jwk_endpoint"))
+		audience := cast.ToString(viper.Get("audience"))
+		issuer := cast.ToString(viper.Get("issuer"))
 		auth0.New(128, 3600)
 		token, errs := auth0.Validate(jwkEndpoint, audience, issuer, c.Request())
 		if errs != nil {
