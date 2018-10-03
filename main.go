@@ -268,8 +268,7 @@ func main() {
 
 	app.GET("/appointments/:id", func(ctx echo.Context) error {
 		id := ctx.Param("id")
-		tempApt := findAppointmentByID(id)
-		apt := []appointment{tempApt}
+		apt := findAppointmentByID(id)
 		return ctx.JSON(http.StatusOK, apt)
 	}, auth0Middleware)
 
