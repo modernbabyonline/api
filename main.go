@@ -84,15 +84,21 @@ func main() {
 		body := buf.String()
 		r := gjson.Parse(body)
 
-		itemsRequested := r.Get("payload.questions_and_answers.#.answer").Array()
 		items := []checklistItem{}
+		itemsRequested := r.Get("payload.questions_and_answers").Array()
 		for _, item := range itemsRequested {
-			items = append(items, checklistItem{Item: item.String(), Status: "Requested"})
+			answer := item.Get("answer").String()
+			answers := strings.Split(answer, "\n")
+			for _, ans := range answers {
+				items = append(items, checklistItem{Item: ans, Status: "Requested"})
+			}
 		}
 
 		timeStamp, err := time.Parse(time.RFC3339, r.Get("payload.event.start_time").String())
 		if err != nil {
-			return ctx.JSON(500, err)
+			m := echo.Map{}
+			m["error"] = `can't parse event starting time`
+			return ctx.JSON(500, m)
 		}
 
 		clientEmail := r.Get("payload.invitee.email").String()
@@ -100,17 +106,20 @@ func main() {
 
 		if len(clients) == 0 {
 			m := echo.Map{}
-			m["error"] = "no clients"
+			m["error"] = "no client matched"
 			return ctx.JSON(400, m)
 		}
+
+		voluteer := r.Get("payload.event.assigned_to.0").String()
+		eventType := r.Get("payload.event_type.name").String()
 
 		appt := appointment{
 			ID:        bson.NewObjectId(),
 			ClientID:  clients[0].ID.Hex(),
-			Type:      r.Get("payload.event_type.name").String(),
+			Type:      eventType,
 			Time:      timeStamp,
 			Items:     items,
-			Volunteer: r.Get("payload.event.assignedTo.0").String(),
+			Volunteer: voluteer,
 			Status:    "SCHEDULED",
 		}
 		saveAppointment(appt)
