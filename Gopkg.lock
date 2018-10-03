@@ -42,6 +42,20 @@
   version = "v1.4.7"
 
 [[projects]]
+  branch = "master"
+  digest = "1:e0361634f0b5e1fd3227eaec90a86bc8595cb2526e71e41bcd72b6e474e198ca"
+  name = "github.com/globalsign/mgo"
+  packages = [
+    ".",
+    "bson",
+    "internal/json",
+    "internal/sasl",
+    "internal/scram",
+  ]
+  pruneopts = "UT"
+  revision = "1ca0a4f7cbcbe61c005d1bd43fdd8bb8b71df6bc"
+
+[[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
   name = "github.com/hashicorp/hcl"
   packages = [
@@ -307,20 +321,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "v2"
-  digest = "1:988de7520a09024d5d94cd99bd545afbf194893994ec759b1cda0a0bbb6adb80"
-  name = "gopkg.in/mgo.v2"
-  packages = [
-    ".",
-    "bson",
-    "internal/json",
-    "internal/sasl",
-    "internal/scram",
-  ]
-  pruneopts = "UT"
-  revision = "9856a29383ce1c59f308dd1cf0363a79b5bef6b5"
-
-[[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -333,6 +333,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/apibillme/auth0",
+    "github.com/globalsign/mgo",
+    "github.com/globalsign/mgo/bson",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
     "github.com/lestrrat-go/jwx/jwt",
@@ -340,8 +342,6 @@
     "github.com/spf13/viper",
     "github.com/tidwall/gjson",
     "gopkg.in/mailgun/mailgun-go.v1",
-    "gopkg.in/mgo.v2",
-    "gopkg.in/mgo.v2/bson",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -42,6 +42,10 @@
 [[constraint]]
   name = "github.com/lestrrat-go/jwx"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/globalsign/mgo"
+  branch = "master"
   
 [prune]
   go-tests = true

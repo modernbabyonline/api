@@ -15,10 +15,10 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/apibillme/auth0"
+	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/tidwall/gjson"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func getBaseURLPath(URL string) string {

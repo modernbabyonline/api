@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	mgo "github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
 var db *mgo.Database
@@ -24,7 +24,7 @@ func connect() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db = session.DB("modernbaby")
+	db = session.DB(cast.ToString(viper.Get("database")))
 }
 
 func saveClient(client client) {
