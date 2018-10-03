@@ -79,7 +79,7 @@ func main() {
 	app.Use(middleware.Logger())
 	app.Use(middleware.CORS())
 
-	app.POST("/webhook", func(ctx echo.Context) error {
+	app.POST("/appointment_webhook", func(ctx echo.Context) error {
 		m := make(map[string]interface{})
 		err := json.NewDecoder(ctx.Request().Body).Decode(&m)
 		if err != nil {
