@@ -11,12 +11,6 @@ import (
 
 func sendMakeApptEmail(recipient string) {
 	viper.AutomaticEnv()
-	viper.SetConfigName("account")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		fmt.Println(err)
-	}
 	mailgunPrivateKey := cast.ToString(viper.Get("mailgun_private_key"))
 	mailgunPublicKey := cast.ToString(viper.Get("mailgun_public_key"))
 	mg := mailgun.NewMailgun("mail.modernbaby.online", mailgunPrivateKey, mailgunPublicKey)
