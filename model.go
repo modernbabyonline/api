@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
-	mgo "github.com/globalsign/mgo"
+	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
 
