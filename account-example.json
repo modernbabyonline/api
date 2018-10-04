@@ -1,5 +1,0 @@
-{
-    "MONGODB_URI": "uri",
-    "MAILGUN_PUBLIC_KEY": "key",
-    "MAILGUN_PRIVATE_KEY": "key"
-}

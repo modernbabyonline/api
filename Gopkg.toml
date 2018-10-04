@@ -46,7 +46,11 @@
 [[constraint]]
   name = "github.com/globalsign/mgo"
   branch = "master"
-  
+
+[[constraint]]
+  name = "github.com/wawandco/fako"
+  branch = "master"
+
 [prune]
   go-tests = true
   unused-packages = true

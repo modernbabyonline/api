@@ -18,6 +18,14 @@
   version = "1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:cc439e1d9d8cff3d575642f5401033b00f2b8d0cd9f859db45604701c990879a"
+  name = "github.com/corpix/uarand"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2b8494104d86337cdd41d0a49cbed8e4583c0ab4"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -56,6 +64,14 @@
   revision = "1ca0a4f7cbcbe61c005d1bd43fdd8bb8b71df6bc"
 
 [[projects]]
+  digest = "1:38101365bdbea4ca2746cf7bac064b3f18d6a5561787d653a54f80c7afb4b513"
+  name = "github.com/gobuffalo/envy"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3c96536452167a705ca5a70b831d3810e1e10452"
+  version = "v1.6.4"
+
+[[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
   name = "github.com/hashicorp/hcl"
   packages = [
@@ -73,6 +89,22 @@
   pruneopts = "UT"
   revision = "8cb6e5b959231cc1119e43259c4a608f9c51a241"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:22725c01ecd8ed0c0f0078944305a57053340d92878b02db925c660cc4accf64"
+  name = "github.com/icrowley/fake"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "4178557ae428460c3780a381c824a1f3aceb6325"
+
+[[projects]]
+  digest = "1:ecd9aa82687cf31d1585d4ac61d0ba180e42e8a6182b85bd785fcca8dfeefc1b"
+  name = "github.com/joho/godotenv"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "23d116af351c84513e1946b527c88823e476be13"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:cdbed6a7b574b13bbabcd8c36c5be56d6444789bab21fcd37d39655eab0b2141"
@@ -150,6 +182,14 @@
   pruneopts = "UT"
   revision = "c2353362d570a7bfa228149c62842019201cfb71"
   version = "v1.8.0"
+
+[[projects]]
+  digest = "1:50656f57259a3c6087d0e8c572d5845e3dee42c77209dd5409b6ab8595f0295e"
+  name = "github.com/markbates/inflect"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "28bf78dadb0f64748ff13a0b6547e4972a5cea64"
+  version = "v1.0.1"
 
 [[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
@@ -280,6 +320,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:f5ddc154d89a0e6bf17fedf3d6e1d93e7b75dfcf08651f62f1807501f897ebf5"
+  name = "github.com/wawandco/fako"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c36a0bc97398c9100daa83ebef1c4e7af32c7654"
+
+[[projects]]
+  branch = "master"
   digest = "1:dedf20eb0d3e8d6aa8a4d3d2fae248222b688ed528201995e152cc497899123c"
   name = "golang.org/x/crypto"
   packages = [
@@ -341,6 +389,7 @@
     "github.com/spf13/cast",
     "github.com/spf13/viper",
     "github.com/tidwall/gjson",
+    "github.com/wawandco/fako",
     "gopkg.in/mailgun/mailgun-go.v1",
   ]
   solver-name = "gps-cdcl"
