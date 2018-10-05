@@ -165,7 +165,7 @@ func findAppointmentsByClientID(id string) ([]Appointment, error) {
 	if !validID {
 		return []Appointment{}, errors.New("requested clientID is not a valid mongo ID")
 	}
-	err = db.C(appointmentsConnection).Find(bson.M{"clientid": id}).All(&appointmentInfo)
+	err = db.C(appointmentsConnection).Find(bson.M{"clientid": bson.ObjectIdHex(id)}).All(&appointmentInfo)
 	if err != nil {
 		return []Appointment{}, err
 	}
