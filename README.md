@@ -12,14 +12,12 @@
 ```bash
 make test
 make build
-make up
 make seedme
 ```
 
 - `make test`: runs go tests in verbose mode
-- `make build`: rebuilds and runs docker-compose - use when you change code in this project (api)
-- `make up`: runs docker-compose - use when you haven't changed any files in this project (api)
-- `make seedme`: runs mongodb seed for 5 clients in modernbaby database
+- `make build`: runs the docker-compose to spin up the project
+- `make seedme`: seeds datbase - run in different terminal window while running `make build`
 
 ## Services:
 - api server on `localhost:8000`
