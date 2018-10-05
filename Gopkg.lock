@@ -19,6 +19,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:5264e1bb1289de58fd25724e060fe45524a9c2b39bad8562a6fd9d6a62d7a3b6"
+  name = "github.com/asaskevich/govalidator"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f9ffefc3facfbe0caee3fea233cbb6e8208f4541"
+
+[[projects]]
+  branch = "master"
   digest = "1:cc439e1d9d8cff3d575642f5401033b00f2b8d0cd9f859db45604701c990879a"
   name = "github.com/corpix/uarand"
   packages = ["."]
@@ -381,6 +389,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/apibillme/auth0",
+    "github.com/asaskevich/govalidator",
     "github.com/globalsign/mgo",
     "github.com/globalsign/mgo/bson",
     "github.com/labstack/echo",

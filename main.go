@@ -84,16 +84,6 @@ func main() {
 		body := buf.String()
 		r := gjson.Parse(body)
 
-		items := []checklistItem{}
-		itemsRequested := r.Get("payload.questions_and_answers").Array()
-		for _, item := range itemsRequested {
-			answer := item.Get("answer").String()
-			answers := strings.Split(answer, "\n")
-			for _, ans := range answers {
-				items = append(items, checklistItem{Item: ans, Status: "Requested"})
-			}
-		}
-
 		timeStamp, err := time.Parse(time.RFC3339, r.Get("payload.event.start_time").String())
 		if err != nil {
 			m := echo.Map{}
@@ -102,83 +92,24 @@ func main() {
 		}
 
 		clientEmail := r.Get("payload.invitee.email").String()
-		clients, err := findClientByEmail(clientEmail)
+		client, err := findClientByEmail(clientEmail)
 
-		if len(clients) == 0 {
-			m := echo.Map{}
-			m["error"] = "no client matched"
-			return ctx.JSON(400, m)
+		if err != nil {
+			return ctx.JSON(500, err)
 		}
 
-		voluteer := r.Get("payload.event.assigned_to.0").String()
 		eventType := r.Get("payload.event_type.name").String()
 
-		appt := appointment{
-			ID:        bson.NewObjectId(),
-			ClientID:  clients[0].ID.Hex(),
-			Type:      eventType,
-			Time:      timeStamp,
-			Items:     items,
-			Volunteer: voluteer,
-			Status:    "SCHEDULED",
+		appt := Appointment{
+			ID:       bson.NewObjectId(),
+			ClientID: client.ID,
+			Type:     eventType,
+			Time:     timeStamp,
+			Status:   "SCHEDULED",
 		}
 		saveAppointment(appt)
 		return ctx.JSON(200, "")
 	})
-
-	app.PUT("/clients/:id", func(ctx echo.Context) error {
-		id := ctx.Param("id")
-		client, err := findClientByID(id)
-		if err != nil {
-			return ctx.JSON(400, err)
-		}
-
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(ctx.Request().Body)
-		body := buf.String()
-		result := gjson.Parse(body)
-
-		status := result.Get("status").String()
-		if status != "" {
-			if client.Status == "PENDING" && status == "APPROVED" {
-				sendMakeApptEmail(client.ClientEmail)
-			}
-			client.Status = status
-		}
-
-		clientName := result.Get("clientName").String()
-		if clientName != "" {
-			client.ClientName = clientName
-		}
-
-		clientEmail := result.Get("clientEmail").String()
-		if clientEmail != "" {
-			client.ClientEmail = clientEmail
-		}
-
-		clientPhone := result.Get("clientPhone").String()
-		if clientPhone != "" {
-			client.ClientPhone = clientPhone
-		}
-
-		clientDOB := result.Get("clientDOB").String()
-		if clientDOB != "" {
-			client.ClientDOB = clientDOB
-		}
-
-		babyDOB := result.Get("babyDoB").String() // TODO: why the wierd caps?
-		if babyDOB != "" {
-			client.BabyDOB = babyDOB
-		}
-
-		clientInc := result.Get("clientInc").Int()
-		if clientInc != 0 {
-			client.ClientIncome = clientInc
-		}
-		// TODO doesn't update demographic info or referrer info
-		updateClient(client)
-		return ctx.JSON(http.StatusOK, client.ID.Hex())
-	}, auth0Middleware)
 
 	app.POST("/clients", func(ctx echo.Context) error {
 		buf := new(bytes.Buffer)
@@ -186,35 +117,37 @@ func main() {
 		body := buf.String()
 		r := gjson.Parse(body)
 
-		existingClients, _ := findClientByEmail(r.Get("clientEmail").String())
-		if len(existingClients) == 0 {
-			c := client{
-				ID:          bson.NewObjectId(),
-				DateCreated: time.Now(),
-				Status:      "PENDING",
-				ClientName:  r.Get("clientName").String(),
-				ClientEmail: r.Get("clientEmail").String(),
-				ClientPhone: r.Get("clientPhone").String(),
-				ClientDOB:   r.Get("clientDoB").String(),
-				BabyDOB:     r.Get("babyDoB").String(),
-				DemographicInfo: map[string]bool{
-					"under19":               r.Get("socioL19").Bool(),
-					"unemployed":            r.Get("socioUnemployed").Bool(),
-					"newToCanada":           r.Get("socioNewToCanada").Bool(),
-					"childWithSpecialNeeds": r.Get("socioSpecial").Bool(),
-					"homeless":              r.Get("socioHomeless").Bool(),
-				},
-				DemographicOther: r.Get("socioOther").String(),
-				ClientIncome:     r.Get("clientInc").Int(),
-				ReferrerName:     r.Get("referrerName").String(),
-				ReferrerEmail:    r.Get("referrerEmail").String(),
-			}
-			saveClient(c)
-			return ctx.JSON(http.StatusOK, c)
+		_, err := findClientByEmail(r.Get("clientEmail").String())
+		if err == nil {
+			return ctx.JSON(400, errors.New("cannot add client as already exists"))
 		}
-		e := echo.Map{}
-		e["error"] = "client already exists"
-		return ctx.JSON(400, e)
+
+		c := Client{
+			ID:          bson.NewObjectId(),
+			DateCreated: time.Now(),
+			Status:      "PENDING",
+			ClientName:  r.Get("clientName").String(),
+			ClientEmail: r.Get("clientEmail").String(),
+			ClientPhone: r.Get("clientPhone").String(),
+			ClientDOB:   r.Get("clientDoB").String(),
+			BabyDOB:     r.Get("babyDoB").String(),
+			DemographicInfo: map[string]bool{
+				"under19":               r.Get("socioL19").Bool(),
+				"unemployed":            r.Get("socioUnemployed").Bool(),
+				"newToCanada":           r.Get("socioNewToCanada").Bool(),
+				"childWithSpecialNeeds": r.Get("socioSpecial").Bool(),
+				"homeless":              r.Get("socioHomeless").Bool(),
+			},
+			DemographicOther: r.Get("socioOther").String(),
+			ClientIncome:     r.Get("clientInc").Int(),
+			ReferrerName:     r.Get("referrerName").String(),
+			ReferrerEmail:    r.Get("referrerEmail").String(),
+		}
+		err = saveClient(c)
+		if err != nil {
+			return ctx.JSON(500, err)
+		}
+		return ctx.JSON(http.StatusOK, c)
 	}, auth0Middleware)
 
 	app.GET("/clients_by_status/:status", func(ctx echo.Context) error {
@@ -232,29 +165,8 @@ func main() {
 		if err != nil {
 			return ctx.JSON(400, err)
 		}
-		clientInfo := []client{tempInfo}
+		clientInfo := []Client{tempInfo}
 		return ctx.JSON(http.StatusOK, clientInfo)
-	}, auth0Middleware)
-
-	app.PUT("/appointments/:id", func(ctx echo.Context) error {
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(ctx.Request().Body)
-		body := buf.String()
-		r := gjson.Parse(body)
-
-		id := ctx.Param("id")
-		apt := findAppointmentByID(id)
-
-		itemsRequested := r.Get("Items").Array()
-		if len(itemsRequested) > 0 {
-			items := []checklistItem{}
-			for _, item := range itemsRequested {
-				items = append(items, checklistItem{Item: item.Get("Item").String(), Status: r.Get("Status").String()})
-			}
-			apt.Items = items
-			updateAppointment(apt)
-		}
-		return ctx.JSON(http.StatusOK, apt)
 	}, auth0Middleware)
 
 	app.GET("/appointments_by_clientid/:clientID", func(ctx echo.Context) error {
@@ -268,28 +180,30 @@ func main() {
 
 	app.GET("/appointments/:id", func(ctx echo.Context) error {
 		id := ctx.Param("id")
-		apt := findAppointmentByID(id)
+		apt, err := findAppointmentByID(id)
+		if err != nil {
+			return ctx.JSON(500, err)
+		}
 		return ctx.JSON(http.StatusOK, apt)
 	}, auth0Middleware)
 
 	app.GET("/search", func(ctx echo.Context) error {
 		name := ctx.QueryParam("name")
 		email := ctx.QueryParam("email")
-		var clientInfo []client
 		if name != "" {
-			var err error
-			clientInfo, err = findClientsByPartialName(name)
+			clientInfo, err := findClientsByPartialName(name)
 			if err != nil {
-				return ctx.JSON(400, err)
+				return ctx.JSON(500, err)
 			}
+			return ctx.JSON(http.StatusOK, clientInfo)
 		} else if email != "" {
-			var err error
-			clientInfo, err = findClientByEmail(email)
+			clientInfo, err := findClientByEmail(email)
 			if err != nil {
-				return ctx.JSON(400, err)
+				return ctx.JSON(500, err)
 			}
+			return ctx.JSON(http.StatusOK, clientInfo)
 		}
-		return ctx.JSON(http.StatusOK, clientInfo)
+		return ctx.JSON(400, "")
 	}, auth0Middleware)
 
 	port := os.Getenv("PORT")

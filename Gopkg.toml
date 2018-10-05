@@ -51,6 +51,10 @@
   name = "github.com/wawandco/fako"
   branch = "master"
 
+[[constraint]]
+  name = "github.com/asaskevich/govalidator"
+  branch = "master"
+
 [prune]
   go-tests = true
   unused-packages = true
