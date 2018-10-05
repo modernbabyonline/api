@@ -129,6 +129,10 @@ func main() {
 		if err == nil {
 			return ctx.JSON(400, errors.New("cannot add client as already exists"))
 		}
+		_, err = findClientBySIN(r.Get("sin").String())
+		if err == nil {
+			return ctx.JSON(400, errors.New("cannot add client as already exists"))
+		}
 
 		c := Client{
 			ID:          bson.NewObjectId(),
@@ -150,6 +154,7 @@ func main() {
 			ClientIncome:     r.Get("clientInc").Int(),
 			ReferrerName:     r.Get("referrerName").String(),
 			ReferrerEmail:    r.Get("referrerEmail").String(),
+			SIN:              r.Get("sin").String(),
 		}
 		err = saveClient(c)
 		if err != nil {
