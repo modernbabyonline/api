@@ -55,6 +55,10 @@
   name = "github.com/asaskevich/govalidator"
   branch = "master"
 
+[[constraint]]
+  name = "github.com/rollbar/rollbar-go"
+  version = "v1.0.1"
+
 [prune]
   go-tests = true
   unused-packages = true

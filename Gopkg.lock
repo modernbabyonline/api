@@ -240,6 +240,14 @@
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:8b6db3b490230af0836cd57f2da94e092ac0c2837fe24e762458006531749b53"
+  name = "github.com/rollbar/rollbar-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5f41889d7c6a59e4add07998cf776b1d335d287f"
+  version = "v1.0.1"
+
+[[projects]]
   digest = "1:6a4a11ba764a56d2758899ec6f3848d24698d48442ebce85ee7a3f63284526cd"
   name = "github.com/spf13/afero"
   packages = [
@@ -395,6 +403,7 @@
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
     "github.com/lestrrat-go/jwx/jwt",
+    "github.com/rollbar/rollbar-go",
     "github.com/spf13/cast",
     "github.com/spf13/viper",
     "github.com/tidwall/gjson",
