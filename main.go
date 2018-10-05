@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	rollbar "github.com/rollbar/rollbar-go"
 	"github.com/tidwall/gjson"
 )
 
@@ -77,12 +79,16 @@ func main() {
 	app := echo.New()
 	app.Use(middleware.Logger())
 	app.Use(middleware.CORS())
+	viper.AutomaticEnv()
+	rollbar.SetToken(cast.ToString(viper.Get("rollbar_access_token")))
+	rollbar.SetEnvironment(cast.ToString(viper.Get("environment")))
 
 	app.POST("/appointment_webhook", func(ctx echo.Context) error {
 		buf := new(bytes.Buffer)
 		_, err := buf.ReadFrom(ctx.Request().Body)
 		if err != nil {
-			return ctx.JSON(500, err)
+			rollbar.Error(err)
+			return ctx.JSON(200, "")
 		}
 		body := buf.String()
 		r := gjson.Parse(body)
@@ -91,13 +97,15 @@ func main() {
 		if err != nil {
 			m := echo.Map{}
 			m["error"] = `can't parse event starting time`
-			return ctx.JSON(500, m)
+			rollbar.Error(m)
+			return ctx.JSON(200, "")
 		}
 
 		clientEmail := r.Get("payload.invitee.email").String()
 		client, err := findClientByEmail(clientEmail)
 		if err != nil {
-			return ctx.JSON(500, err)
+			rollbar.Error(err)
+			return ctx.JSON(200, "")
 		}
 
 		eventType := r.Get("payload.event_type.name").String()
@@ -111,7 +119,9 @@ func main() {
 		}
 		err = saveAppointment(appt)
 		if err != nil {
-			return ctx.JSON(500, err)
+			log.Println(err)
+			rollbar.Error(err)
+			return ctx.JSON(200, "")
 		}
 		return ctx.JSON(200, "")
 	})
@@ -120,7 +130,9 @@ func main() {
 		buf := new(bytes.Buffer)
 		_, err := buf.ReadFrom(ctx.Request().Body)
 		if err != nil {
-			return ctx.JSON(500, err)
+			m := echo.Map{}
+			m["error"] = err.Error
+			return ctx.JSON(500, m)
 		}
 		body := buf.String()
 		r := gjson.Parse(body)
@@ -158,7 +170,9 @@ func main() {
 		}
 		err = saveClient(c)
 		if err != nil {
-			return ctx.JSON(500, err)
+			m := echo.Map{}
+			m["error"] = err.Error
+			return ctx.JSON(500, m)
 		}
 		return ctx.JSON(http.StatusOK, c)
 	}, auth0Middleware)
@@ -167,7 +181,9 @@ func main() {
 		buf := new(bytes.Buffer)
 		_, err := buf.ReadFrom(ctx.Request().Body)
 		if err != nil {
-			return ctx.JSON(500, err)
+			m := echo.Map{}
+			m["error"] = err.Error
+			return ctx.JSON(500, m)
 		}
 		body := buf.String()
 		r := gjson.Parse(body)
@@ -181,7 +197,9 @@ func main() {
 		}
 		err = updateClient(id, c)
 		if err != nil {
-			return ctx.JSON(500, err)
+			m := echo.Map{}
+			m["error"] = err.Error
+			return ctx.JSON(500, m)
 		}
 		return ctx.JSON(200, "")
 	}, auth0Middleware)
@@ -190,7 +208,9 @@ func main() {
 		status := ctx.Param("status")
 		clientInfo, err := findClientsByApprovedStatus(status)
 		if err != nil {
-			return ctx.JSON(400, err)
+			m := echo.Map{}
+			m["error"] = err.Error
+			return ctx.JSON(400, m)
 		}
 		return ctx.JSON(http.StatusOK, clientInfo)
 	}, auth0Middleware)
@@ -199,7 +219,9 @@ func main() {
 		id := ctx.Param("id")
 		tempInfo, err := findClientByID(id)
 		if err != nil {
-			return ctx.JSON(400, err)
+			m := echo.Map{}
+			m["error"] = err.Error
+			return ctx.JSON(400, m)
 		}
 		clientInfo := []Client{tempInfo}
 		return ctx.JSON(http.StatusOK, clientInfo)
@@ -209,7 +231,9 @@ func main() {
 		clientID := ctx.Param("clientID")
 		apt, err := findAppointmentsByClientID(clientID)
 		if err != nil {
-			return ctx.JSON(400, err)
+			m := echo.Map{}
+			m["error"] = err.Error
+			return ctx.JSON(400, m)
 		}
 		return ctx.JSON(http.StatusOK, apt)
 	}, auth0Middleware)
@@ -218,7 +242,9 @@ func main() {
 		id := ctx.Param("id")
 		apt, err := findAppointmentByID(id)
 		if err != nil {
-			return ctx.JSON(500, err)
+			m := echo.Map{}
+			m["error"] = err.Error
+			return ctx.JSON(500, m)
 		}
 		return ctx.JSON(http.StatusOK, apt)
 	}, auth0Middleware)
@@ -229,13 +255,17 @@ func main() {
 		if name != "" {
 			clientInfo, err := findClientsByPartialName(name)
 			if err != nil {
-				return ctx.JSON(500, err)
+				m := echo.Map{}
+				m["error"] = err.Error
+				return ctx.JSON(500, m)
 			}
 			return ctx.JSON(http.StatusOK, clientInfo)
 		} else if email != "" {
 			clientInfo, err := findClientByEmail(email)
 			if err != nil {
-				return ctx.JSON(500, err)
+				m := echo.Map{}
+				m["error"] = err.Error
+				return ctx.JSON(500, m)
 			}
 			return ctx.JSON(http.StatusOK, clientInfo)
 		}

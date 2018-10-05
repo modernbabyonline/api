@@ -17,7 +17,7 @@ make seedme
 
 - `make test`: runs go tests in verbose mode
 - `make build`: runs the docker-compose to spin up the project
-- `make seedme`: seeds datbase - run in different terminal window while running `make build`
+- `make seedme`: seeds database - run in different terminal window while running `make build`
 
 ## Services:
 - api server on `localhost:8000`

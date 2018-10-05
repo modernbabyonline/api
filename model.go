@@ -171,7 +171,7 @@ func findAppointmentsByClientID(id string) ([]Appointment, error) {
 // Appointment - this is the appointment in the database
 type Appointment struct {
 	ID       bson.ObjectId `bson:"_id"`
-	ClientID bson.ObjectId `bson:"_id"`
+	ClientID bson.ObjectId
 	Type     string
 	Time     time.Time
 	Status   string // SCHEDULED, RESCHEDULED, CANCELLED
