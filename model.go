@@ -3,13 +3,12 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"log"
-	"math/big"
 	"time"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
@@ -18,82 +17,133 @@ var db *mgo.Database
 var clientsConnection = "clients"
 var appointmentsConnection = "appointments"
 
-func connect() {
+func connect() error {
 	viper.AutomaticEnv()
 	session, err := mgo.Dial(cast.ToString(viper.Get("mongodb_uri")))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	db = session.DB(cast.ToString(viper.Get("database")))
+	return nil
 }
 
-func saveClient(client client) {
-	connect()
-	db.C(clientsConnection).Insert(&client)
-}
-
-func updateClient(client client) {
-	connect()
-	db.C(clientsConnection).Update(bson.M{"_id": client.ID}, client)
-}
-
-func findClientByID(id string) (client, error) {
-	connect()
-	var clientInfo client
-	_, err := new(big.Int).SetString(id, 16)
-	if !err {
-		return client{}, errors.New("Not a hex number")
+func saveClient(client Client) error {
+	err := connect()
+	if err != nil {
+		return err
 	}
-	db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&clientInfo)
+	err = db.C(clientsConnection).Insert(&client)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateClient(client Client) error {
+	err := connect()
+	if err != nil {
+		return err
+	}
+	err = db.C(clientsConnection).Update(bson.M{"_id": client.ID}, client)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func findClientByID(id string) (Client, error) {
+	err := connect()
+	if err != nil {
+		return Client{}, err
+	}
+	validID := govalidator.IsMongoID(id)
+	if !validID {
+		return Client{}, errors.New("requested clientID is not a valid mongo ID")
+	}
+	var clientInfo Client
+	err = db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&clientInfo)
+	if err != nil {
+		return Client{}, err
+	}
 	return clientInfo, nil
 }
 
-func findClientByEmail(email string) ([]client, error) {
-	connect()
-	clientInfo := make([]client, 0)
-	err := db.C(clientsConnection).Find(bson.M{"clientemail": email}).All(&clientInfo)
-	return clientInfo, err
+func findClientByEmail(email string) (Client, error) {
+	err := connect()
+	var clientInfo Client
+	err = db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&clientInfo)
+	if err != nil {
+		return Client{}, err
+	}
+	return clientInfo, nil
 }
-func findClientsByApprovedStatus(status string) ([]client, error) {
-	connect()
-	clientInfo := make([]client, 0)
-	err := db.C(clientsConnection).Find(bson.M{"status": status}).All(&clientInfo)
-	return clientInfo, err
+
+func findClientsByApprovedStatus(status string) ([]Client, error) {
+	err := connect()
+	if err != nil {
+		return []Client{}, err
+	}
+	clientInfo := make([]Client, 0)
+	err = db.C(clientsConnection).Find(bson.M{"status": status}).All(&clientInfo)
+	if err != nil {
+		return []Client{}, err
+	}
+	return clientInfo, nil
 }
-func findClientsByPartialName(name string) ([]client, error) {
-	connect()
-	clientInfo := make([]client, 0)
-	// Construct RegEx string
+
+func findClientsByPartialName(name string) ([]Client, error) {
+	err := connect()
+	if err != nil {
+		return []Client{}, err
+	}
+	clientInfo := make([]Client, 0)
 	regexStr := `.*` + name + `.*`
-	err := db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{Pattern: regexStr, Options: "i"}}}).All(&clientInfo)
-	return clientInfo, err
+	err = db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{Pattern: regexStr, Options: "i"}}}).All(&clientInfo)
+	if err != nil {
+		return []Client{}, err
+	}
+	return clientInfo, nil
 }
 
-func saveAppointment(apt appointment) {
-	connect()
-	db.C(appointmentsConnection).Insert(&apt)
+func saveAppointment(apt Appointment) error {
+	err := connect()
+	if err != nil {
+		return err
+	}
+	err = db.C(appointmentsConnection).Insert(&apt)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func updateAppointment(apt appointment) {
-	connect()
-	db.C(appointmentsConnection).Update(bson.M{"_id": apt.ID}, apt)
+func findAppointmentByID(id string) (Appointment, error) {
+	err := connect()
+	if err != nil {
+		return Appointment{}, err
+	}
+	var apt Appointment
+	err = db.C(appointmentsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
+	if err != nil {
+		return Appointment{}, err
+	}
+	return apt, nil
 }
 
-func findAppointmentByID(id string) appointment {
-	connect()
-	var apt appointment
-	db.C(appointmentsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
-	return apt
-}
-
-func findAppointmentsByClientID(id string) ([]appointment, error) {
-	connect()
-	appointmentInfo := make([]appointment, 0)
-	/*_, err := new(big.Int).SetString(id, 16)
-	if !err {
-		return appointmentInfo, errors.New("Not a hex number")
-	}*/
-	db.C(appointmentsConnection).Find(bson.M{"clientid": id}).All(&appointmentInfo)
+func findAppointmentsByClientID(id string) ([]Appointment, error) {
+	err := connect()
+	if err != nil {
+		return []Appointment{}, err
+	}
+	appointmentInfo := make([]Appointment, 0)
+	validID := govalidator.IsMongoID(id)
+	if !validID {
+		return []Appointment{}, errors.New("requested clientID is not a valid mongo ID")
+	}
+	err = db.C(appointmentsConnection).Find(bson.M{"clientid": id}).All(&appointmentInfo)
+	if err != nil {
+		return []Appointment{}, err
+	}
 	return appointmentInfo, nil
 }
 
@@ -102,17 +152,17 @@ type checklistItem struct {
 	Status string // 0 = not requested, 1 = requested but not available, 2 = requested and available
 }
 
-type appointment struct {
-	ID        bson.ObjectId `bson:"_id"`
-	ClientID  string
-	Type      string
-	Time      time.Time
-	Items     []checklistItem
-	Volunteer string
-	Status    string // SCHEDULED, RESCHEDULED, CANCELLED
+// Appointment - this is the appointment in the database
+type Appointment struct {
+	ID       bson.ObjectId `bson:"_id"`
+	ClientID bson.ObjectId `bson:"_id"`
+	Type     string
+	Time     time.Time
+	Status   string // SCHEDULED, RESCHEDULED, CANCELLED
 }
 
-type client struct {
+// Client - this is the client in the database
+type Client struct {
 	ID               bson.ObjectId `bson:"_id"`
 	DateCreated      time.Time
 	Status           string // PENDING, APPROVED, DECLINED
