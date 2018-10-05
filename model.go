@@ -86,6 +86,19 @@ func findClientByEmail(email string) (Client, error) {
 	return clientInfo, nil
 }
 
+func findClientBySIN(sin string) (Client, error) {
+	err := connect()
+	if err != nil {
+		return Client{}, err
+	}
+	var clientInfo Client
+	err = db.C(clientsConnection).Find(bson.M{"sin": sin}).One(&clientInfo)
+	if err != nil {
+		return Client{}, err
+	}
+	return clientInfo, nil
+}
+
 func findClientsByApprovedStatus(status string) ([]Client, error) {
 	err := connect()
 	if err != nil {
