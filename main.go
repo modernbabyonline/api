@@ -80,7 +80,10 @@ func main() {
 
 	app.POST("/appointment_webhook", func(ctx echo.Context) error {
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(ctx.Request().Body)
+		_, err := buf.ReadFrom(ctx.Request().Body)
+		if err != nil {
+			return ctx.JSON(500, err)
+		}
 		body := buf.String()
 		r := gjson.Parse(body)
 
@@ -93,7 +96,6 @@ func main() {
 
 		clientEmail := r.Get("payload.invitee.email").String()
 		client, err := findClientByEmail(clientEmail)
-
 		if err != nil {
 			return ctx.JSON(500, err)
 		}
@@ -107,17 +109,23 @@ func main() {
 			Time:     timeStamp,
 			Status:   "SCHEDULED",
 		}
-		saveAppointment(appt)
+		err = saveAppointment(appt)
+		if err != nil {
+			return ctx.JSON(500, err)
+		}
 		return ctx.JSON(200, "")
 	})
 
 	app.POST("/clients", func(ctx echo.Context) error {
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(ctx.Request().Body)
+		_, err := buf.ReadFrom(ctx.Request().Body)
+		if err != nil {
+			return ctx.JSON(500, err)
+		}
 		body := buf.String()
 		r := gjson.Parse(body)
 
-		_, err := findClientByEmail(r.Get("clientEmail").String())
+		_, err = findClientByEmail(r.Get("clientEmail").String())
 		if err == nil {
 			return ctx.JSON(400, errors.New("cannot add client as already exists"))
 		}
@@ -148,6 +156,29 @@ func main() {
 			return ctx.JSON(500, err)
 		}
 		return ctx.JSON(http.StatusOK, c)
+	}, auth0Middleware)
+
+	app.PATCH("/clients/:id", func(ctx echo.Context) error {
+		buf := new(bytes.Buffer)
+		_, err := buf.ReadFrom(ctx.Request().Body)
+		if err != nil {
+			return ctx.JSON(500, err)
+		}
+		body := buf.String()
+		r := gjson.Parse(body)
+
+		id := ctx.Param("id")
+
+		// only handle status changes for now
+		status := r.Get("status").String()
+		c := Client{
+			Status: status,
+		}
+		err = updateClient(id, c)
+		if err != nil {
+			return ctx.JSON(500, err)
+		}
+		return ctx.JSON(200, "")
 	}, auth0Middleware)
 
 	app.GET("/clients_by_status/:status", func(ctx echo.Context) error {

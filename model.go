@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -35,6 +34,24 @@ func saveClient(client Client) error {
 	err = db.C(clientsConnection).Insert(&client)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func updateClient(id string, client Client) error {
+	err := connect()
+	if err != nil {
+		return err
+	}
+	err = db.C(clientsConnection).Update(bson.M{"_id": id}, client)
+	if err != nil {
+		return err
+	}
+	if client.Status == "APPROVED" {
+		err = sendMakeApptEmail(client.ClientEmail)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -138,11 +155,6 @@ func findAppointmentsByClientID(id string) ([]Appointment, error) {
 	return appointmentInfo, nil
 }
 
-type checklistItem struct {
-	Item   string // checklist items
-	Status string // 0 = not requested, 1 = requested but not available, 2 = requested and available
-}
-
 // Appointment - this is the appointment in the database
 type Appointment struct {
 	ID       bson.ObjectId `bson:"_id"`
@@ -169,9 +181,5 @@ type Client struct {
 	AgencyName       string
 	ReferrerName     string
 	ReferrerEmail    string
-}
-
-func serialize(v interface{}) string {
-	serialized, _ := json.Marshal(v)
-	return string(serialized)
+	SIN              string
 }
