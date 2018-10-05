@@ -39,18 +39,6 @@ func saveClient(client Client) error {
 	return nil
 }
 
-func updateClient(client Client) error {
-	err := connect()
-	if err != nil {
-		return err
-	}
-	err = db.C(clientsConnection).Update(bson.M{"_id": client.ID}, client)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func findClientByID(id string) (Client, error) {
 	err := connect()
 	if err != nil {
@@ -70,6 +58,9 @@ func findClientByID(id string) (Client, error) {
 
 func findClientByEmail(email string) (Client, error) {
 	err := connect()
+	if err != nil {
+		return Client{}, err
+	}
 	var clientInfo Client
 	err = db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&clientInfo)
 	if err != nil {
