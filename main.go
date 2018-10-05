@@ -192,10 +192,7 @@ func main() {
 
 		// only handle status changes for now
 		status := r.Get("status").String()
-		c := Client{
-			Status: status,
-		}
-		err = updateClient(id, c)
+		err = updateClientStatus(id, status)
 		if err != nil {
 			m := echo.Map{}
 			m["error"] = err.Error

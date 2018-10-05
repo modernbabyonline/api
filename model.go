@@ -38,17 +38,21 @@ func saveClient(client Client) error {
 	return nil
 }
 
-func updateClient(id string, client Client) error {
+func updateClientStatus(id string, status string) error {
 	err := connect()
 	if err != nil {
 		return err
 	}
-	err = db.C(clientsConnection).Update(bson.M{"_id": id}, client)
+	err = db.C(clientsConnection).Update(bson.M{"_id": bson.ObjectIdHex(id)}, bson.M{"$set": bson.M{"status": status}})
 	if err != nil {
 		return err
 	}
-	if client.Status == "APPROVED" {
-		err = sendMakeApptEmail(client.ClientEmail)
+	c, err := findClientByID(id)
+	if err != nil {
+		return err
+	}
+	if status == "APPROVED" {
+		err = sendMakeApptEmail(c.ClientEmail)
 		if err != nil {
 			return err
 		}
