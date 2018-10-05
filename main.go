@@ -139,11 +139,15 @@ func main() {
 
 		_, err = findClientByEmail(r.Get("clientEmail").String())
 		if err == nil {
-			return ctx.JSON(400, errors.New("cannot add client as already exists"))
+			m := echo.Map{}
+			m["error"] = "cannot add client as already exists"
+			return ctx.JSON(400, m)
 		}
 		_, err = findClientBySIN(r.Get("sin").String())
 		if err == nil {
-			return ctx.JSON(400, errors.New("cannot add client as already exists"))
+			m := echo.Map{}
+			m["error"] = "cannot add client as already exists"
+			return ctx.JSON(400, m)
 		}
 
 		c := Client{

@@ -10,9 +10,9 @@ services:
     environment:
       MONGODB_URI: "mongodb://root:example@mongo:27017"
       DATABASE: "modernbaby"
-      AUDIENCE: "https://api.modernbaby.online/"
-      ISSUER: "https://secure.modernbaby.online/"
-      JWK_ENDPOINT: "https://secure.modernbaby.online/.well-known/jwks.json"
+      AUDIENCE: "http://localhost:8000/"
+      ISSUER: "https://modernbaby-test.auth0.com/"
+      JWK_ENDPOINT: "https://modernbaby-test.auth0.com/.well-known/jwks.json"
 
   mongo:
     image: mongo:latest
