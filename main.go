@@ -124,7 +124,7 @@ func main() {
 			m["error"] = err.Error
 			return ctx.JSON(500, m)
 		}
-		data := []byte(buf.String())
+		data := buf.Bytes()
 
 		var c echo.Map
 		err = json.Unmarshal(data, &c)
@@ -166,7 +166,7 @@ func main() {
 			m["error"] = err.Error
 			return ctx.JSON(500, m)
 		}
-		data := []byte(buf.String())
+		data := buf.Bytes()
 
 		var c echo.Map
 		err = json.Unmarshal(data, &c)
