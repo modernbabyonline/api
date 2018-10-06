@@ -2,7 +2,8 @@ package main
 
 import (
 	"errors"
-	"time"
+
+	"github.com/labstack/echo"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
@@ -26,7 +27,7 @@ func connect() error {
 	return nil
 }
 
-func saveClient(client Client) error {
+func saveClient(client interface{}) error {
 	err := connect()
 	if err != nil {
 		return err
@@ -52,7 +53,7 @@ func updateClientStatus(id string, status string) error {
 		return err
 	}
 	if status == "APPROVED" {
-		err = sendMakeApptEmail(c.ClientEmail)
+		err = sendMakeApptEmail(cast.ToString(c["clientEmail"]))
 		if err != nil {
 			return err
 		}
@@ -60,77 +61,77 @@ func updateClientStatus(id string, status string) error {
 	return nil
 }
 
-func findClientByID(id string) (Client, error) {
+func findClientByID(id string) (echo.Map, error) {
 	err := connect()
 	if err != nil {
-		return Client{}, err
+		return echo.Map{}, err
 	}
 	validID := govalidator.IsMongoID(id)
 	if !validID {
-		return Client{}, errors.New("requested clientID is not a valid mongo ID")
+		return echo.Map{}, errors.New("requested clientID is not a valid mongo ID")
 	}
-	var clientInfo Client
-	err = db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&clientInfo)
+	var client echo.Map
+	err = db.C(clientsConnection).FindId(bson.ObjectIdHex(id)).One(&client)
 	if err != nil {
-		return Client{}, err
+		return echo.Map{}, err
 	}
-	return clientInfo, nil
+	return client, nil
 }
 
-func findClientByEmail(email string) (Client, error) {
+func findClientByEmail(email string) (echo.Map, error) {
 	err := connect()
 	if err != nil {
-		return Client{}, err
+		return echo.Map{}, err
 	}
-	var clientInfo Client
-	err = db.C(clientsConnection).Find(bson.M{"clientemail": email}).One(&clientInfo)
+	var client echo.Map
+	err = db.C(clientsConnection).Find(bson.M{"clientEmail": email}).One(&client)
 	if err != nil {
-		return Client{}, err
+		return echo.Map{}, err
 	}
-	return clientInfo, nil
+	return client, nil
 }
 
-func findClientBySIN(sin string) (Client, error) {
+func findClientBySIN(sin string) (echo.Map, error) {
 	err := connect()
 	if err != nil {
-		return Client{}, err
+		return echo.Map{}, err
 	}
-	var clientInfo Client
-	err = db.C(clientsConnection).Find(bson.M{"sin": sin}).One(&clientInfo)
+	var client echo.Map
+	err = db.C(clientsConnection).Find(bson.M{"sin": sin}).One(&client)
 	if err != nil {
-		return Client{}, err
+		return echo.Map{}, err
 	}
-	return clientInfo, nil
+	return client, nil
 }
 
-func findClientsByApprovedStatus(status string) ([]Client, error) {
+func findClientsByApprovedStatus(status string) ([]echo.Map, error) {
 	err := connect()
 	if err != nil {
-		return []Client{}, err
+		return []echo.Map{}, err
 	}
-	clientInfo := make([]Client, 0)
-	err = db.C(clientsConnection).Find(bson.M{"status": status}).All(&clientInfo)
+	clients := make([]echo.Map, 0)
+	err = db.C(clientsConnection).Find(bson.M{"status": status}).All(&clients)
 	if err != nil {
-		return []Client{}, err
+		return []echo.Map{}, err
 	}
-	return clientInfo, nil
+	return clients, nil
 }
 
-func findClientsByPartialName(name string) ([]Client, error) {
+func findClientsByPartialName(name string) ([]echo.Map, error) {
 	err := connect()
 	if err != nil {
-		return []Client{}, err
+		return []echo.Map{}, err
 	}
-	clientInfo := make([]Client, 0)
+	clients := make([]echo.Map, 0)
 	regexStr := `.*` + name + `.*`
-	err = db.C(clientsConnection).Find(bson.M{"clientname": bson.M{"$regex": bson.RegEx{Pattern: regexStr, Options: "i"}}}).All(&clientInfo)
+	err = db.C(clientsConnection).Find(bson.M{"clientName": bson.M{"$regex": bson.RegEx{Pattern: regexStr, Options: "i"}}}).All(&clients)
 	if err != nil {
-		return []Client{}, err
+		return []echo.Map{}, err
 	}
-	return clientInfo, nil
+	return clients, nil
 }
 
-func saveAppointment(apt Appointment) error {
+func saveAppointment(apt echo.Map) error {
 	err := connect()
 	if err != nil {
 		return err
@@ -142,61 +143,32 @@ func saveAppointment(apt Appointment) error {
 	return nil
 }
 
-func findAppointmentByID(id string) (Appointment, error) {
+func findAppointmentByID(id string) (echo.Map, error) {
 	err := connect()
 	if err != nil {
-		return Appointment{}, err
+		return echo.Map{}, err
 	}
-	var apt Appointment
+	var apt echo.Map
 	err = db.C(appointmentsConnection).FindId(bson.ObjectIdHex(id)).One(&apt)
 	if err != nil {
-		return Appointment{}, err
+		return echo.Map{}, err
 	}
 	return apt, nil
 }
 
-func findAppointmentsByClientID(id string) ([]Appointment, error) {
+func findAppointmentsByClientID(id string) ([]echo.Map, error) {
 	err := connect()
 	if err != nil {
-		return []Appointment{}, err
+		return []echo.Map{}, err
 	}
-	appointmentInfo := make([]Appointment, 0)
+	appointments := make([]echo.Map, 0)
 	validID := govalidator.IsMongoID(id)
 	if !validID {
-		return []Appointment{}, errors.New("requested clientID is not a valid mongo ID")
+		return []echo.Map{}, errors.New("requested clientID is not a valid mongo ID")
 	}
-	err = db.C(appointmentsConnection).Find(bson.M{"clientid": bson.ObjectIdHex(id)}).All(&appointmentInfo)
+	err = db.C(appointmentsConnection).Find(bson.M{"clientid": bson.ObjectIdHex(id)}).All(&appointments)
 	if err != nil {
-		return []Appointment{}, err
+		return []echo.Map{}, err
 	}
-	return appointmentInfo, nil
-}
-
-// Appointment - this is the appointment in the database
-type Appointment struct {
-	ID       bson.ObjectId `bson:"_id"`
-	ClientID bson.ObjectId
-	Type     string
-	Time     time.Time
-	Status   string // SCHEDULED, RESCHEDULED, CANCELLED
-}
-
-// Client - this is the client in the database
-type Client struct {
-	ID               bson.ObjectId `bson:"_id"`
-	DateCreated      time.Time
-	Status           string // PENDING, APPROVED, DECLINED
-	ClientName       string
-	ClientEmail      string
-	ClientPhone      string
-	ClientDOB        string
-	BabyDOB          string
-	DemographicInfo  map[string]bool
-	DemographicOther string
-	ClientIncome     int64
-	AppointmentsIDs  []int
-	AgencyName       string
-	ReferrerName     string
-	ReferrerEmail    string
-	SIN              string
+	return appointments, nil
 }

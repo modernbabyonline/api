@@ -2,12 +2,11 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/viper"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/spf13/cast"
 
 	"github.com/apibillme/auth0"
-	"github.com/globalsign/mgo/bson"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	rollbar "github.com/rollbar/rollbar-go"
@@ -92,12 +90,12 @@ func main() {
 		}
 		body := buf.String()
 		r := gjson.Parse(body)
+		data := []byte(body)
 
-		timeStamp, err := time.Parse(time.RFC3339, r.Get("payload.event.start_time").String())
+		var c echo.Map
+		err = json.Unmarshal(data, &c)
 		if err != nil {
-			m := echo.Map{}
-			m["error"] = `can't parse event starting time`
-			rollbar.Error(m)
+			rollbar.Error(err)
 			return ctx.JSON(200, "")
 		}
 
@@ -108,18 +106,10 @@ func main() {
 			return ctx.JSON(200, "")
 		}
 
-		eventType := r.Get("payload.event_type.name").String()
+		c["clientID"] = client["_id"]
 
-		appt := Appointment{
-			ID:       bson.NewObjectId(),
-			ClientID: client.ID,
-			Type:     eventType,
-			Time:     timeStamp,
-			Status:   "SCHEDULED",
-		}
-		err = saveAppointment(appt)
+		err = saveAppointment(c)
 		if err != nil {
-			log.Println(err)
 			rollbar.Error(err)
 			return ctx.JSON(200, "")
 		}
@@ -134,44 +124,31 @@ func main() {
 			m["error"] = err.Error
 			return ctx.JSON(500, m)
 		}
-		body := buf.String()
-		r := gjson.Parse(body)
+		data := []byte(buf.String())
 
-		_, err = findClientByEmail(r.Get("clientEmail").String())
+		var c echo.Map
+		err = json.Unmarshal(data, &c)
+		if err != nil {
+			m := echo.Map{}
+			m["error"] = err.Error()
+			return ctx.JSON(400, m)
+		}
+
+		_, err = findClientByEmail(cast.ToString(c["clientEmail"]))
 		if err == nil {
 			m := echo.Map{}
 			m["error"] = "cannot add client as already exists"
 			return ctx.JSON(400, m)
 		}
-		_, err = findClientBySIN(r.Get("sin").String())
+		_, err = findClientBySIN(cast.ToString(c["sin"]))
 		if err == nil {
 			m := echo.Map{}
 			m["error"] = "cannot add client as already exists"
 			return ctx.JSON(400, m)
 		}
 
-		c := Client{
-			ID:          bson.NewObjectId(),
-			DateCreated: time.Now(),
-			Status:      "PENDING",
-			ClientName:  r.Get("clientName").String(),
-			ClientEmail: r.Get("clientEmail").String(),
-			ClientPhone: r.Get("clientPhone").String(),
-			ClientDOB:   r.Get("clientDoB").String(),
-			BabyDOB:     r.Get("babyDoB").String(),
-			DemographicInfo: map[string]bool{
-				"under19":               r.Get("socioL19").Bool(),
-				"unemployed":            r.Get("socioUnemployed").Bool(),
-				"newToCanada":           r.Get("socioNewToCanada").Bool(),
-				"childWithSpecialNeeds": r.Get("socioSpecial").Bool(),
-				"homeless":              r.Get("socioHomeless").Bool(),
-			},
-			DemographicOther: r.Get("socioOther").String(),
-			ClientIncome:     r.Get("clientInc").Int(),
-			ReferrerName:     r.Get("referrerName").String(),
-			ReferrerEmail:    r.Get("referrerEmail").String(),
-			SIN:              r.Get("sin").String(),
-		}
+		c["status"] = "PENDING"
+
 		err = saveClient(c)
 		if err != nil {
 			m := echo.Map{}
@@ -189,13 +166,20 @@ func main() {
 			m["error"] = err.Error
 			return ctx.JSON(500, m)
 		}
-		body := buf.String()
-		r := gjson.Parse(body)
+		data := []byte(buf.String())
+
+		var c echo.Map
+		err = json.Unmarshal(data, &c)
+		if err != nil {
+			m := echo.Map{}
+			m["error"] = err.Error()
+			return ctx.JSON(400, m)
+		}
 
 		id := ctx.Param("id")
 
 		// only handle status changes for now
-		status := r.Get("status").String()
+		status := cast.ToString(c["status"])
 		err = updateClientStatus(id, status)
 		if err != nil {
 			m := echo.Map{}
@@ -218,14 +202,13 @@ func main() {
 
 	app.GET("/clients/:id", func(ctx echo.Context) error {
 		id := ctx.Param("id")
-		tempInfo, err := findClientByID(id)
+		c, err := findClientByID(id)
 		if err != nil {
 			m := echo.Map{}
 			m["error"] = err.Error
 			return ctx.JSON(400, m)
 		}
-		clientInfo := []Client{tempInfo}
-		return ctx.JSON(http.StatusOK, clientInfo)
+		return ctx.JSON(http.StatusOK, c)
 	}, auth0Middleware)
 
 	app.GET("/appointments_by_clientid/:clientID", func(ctx echo.Context) error {
